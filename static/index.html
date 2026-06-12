@@ -159,8 +159,8 @@
                     <span class="h-2 w-2 rounded-full bg-emerald-600"></span>
                     AML API Connected
                 </div>
-                <div class="text-xs text-slate-500 font-mono">
-                    System Time: 18:07:12
+                <div id="system-time" class="text-xs text-slate-500 font-mono">
+                    System Time: Loading...
                 </div>
             </div>
         </header>
@@ -584,6 +584,18 @@
 
         document.addEventListener("DOMContentLoaded", () => {
             initApp();
+            
+            // Set dynamic system clock
+            function updateSystemTime() {
+                const now = new Date();
+                const timeStr = now.toTimeString().split(' ')[0]; // HH:MM:SS
+                const elem = document.getElementById("system-time");
+                if (elem) {
+                    elem.innerText = `System Time: ${timeStr}`;
+                }
+            }
+            setInterval(updateSystemTime, 1000);
+            updateSystemTime();
         });
 
         // App Bootstrapper
