@@ -1,0 +1,1749 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MuleTrace (MTX) | AML & Money Mule Analytics Platform</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        darkBg: '#0f172a',
+                        cardBg: '#1e293b',
+                        borderCol: '#334155',
+                        brandBlue: '#2563eb',
+                        brandRed: '#ef4444',
+                        brandGreen: '#10b981',
+                        brandYellow: '#f59e0b'
+                    }
+                }
+            }
+        }
+    </script>
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- vis.js CDN for Network Graph -->
+    <script type="text/javascript" src="https://unpkg.com/vis-network/standalone/umd/vis-network.min.js"></script>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f8fafc;
+            background-image: 
+                radial-gradient(at 0% 0%, hsla(220,100%,98%,1) 0, transparent 40%), 
+                radial-gradient(at 50% 0%, hsla(242,100%,97%,1) 0, transparent 50%),
+                radial-gradient(at 100% 0%, hsla(200,100%,98%,1) 0, transparent 40%);
+            color: #334155;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+        
+        .flat-panel {
+            background-color: rgba(255, 255, 255, 0.75);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(226, 232, 240, 0.8);
+            border-radius: 16px;
+            box-shadow: 0 4px 20px -2px rgba(15, 23, 42, 0.04), 0 2px 8px -1px rgba(15, 23, 42, 0.02);
+            transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .flat-panel:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 12px 30px -4px rgba(15, 23, 42, 0.08), 0 4px 12px -2px rgba(15, 23, 42, 0.03);
+            border-color: rgba(37, 99, 235, 0.25);
+        }
+
+        .scrollable-list::-webkit-scrollbar {
+            width: 6px;
+        }
+        .scrollable-list::-webkit-scrollbar-track {
+            background: rgba(248, 250, 252, 0.5);
+        }
+        .scrollable-list::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 6px;
+        }
+        .scrollable-list::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
+
+        /* Modern Infinite Scrolling Ticker CSS */
+        .ticker-wrap {
+            width: 100%;
+            overflow: hidden;
+            background: linear-gradient(90deg, #0f172a 0%, #1e293b 50%, #0f172a 100%);
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+        
+        .ticker-container {
+            display: flex;
+            width: max-content;
+            animation: ticker 35s linear infinite;
+        }
+        
+        .ticker-container:hover {
+            animation-play-state: paused;
+        }
+
+        .ticker-content {
+            display: flex;
+            white-space: nowrap;
+        }
+
+        @keyframes ticker {
+            0% {
+                transform: translate3d(0, 0, 0);
+            }
+            100% {
+                transform: translate3d(-50%, 0, 0);
+            }
+        }
+    </style>
+</head>
+<body class="min-h-screen bg-slate-50 text-slate-700">
+
+    <!-- Infinite Scrolling Hackathon Announcement Bar -->
+    <div class="ticker-wrap w-full border-b border-slate-800 py-2.5 overflow-hidden flex items-center select-none">
+        <div class="ticker-container">
+            <div class="ticker-content flex shrink-0 gap-16 items-center px-6">
+                <span class="text-slate-300 text-xs font-semibold tracking-wide flex items-center gap-2">
+                    <i class="fa-solid fa-trophy text-amber-400"></i>
+                    <span>This is a hackathon project built for <strong>PSB's Cybersecurity, Fraud & Artificial Intelligence Hackathon 2026</strong> in collaboration with <strong>IIT Hyderabad</strong></span>
+                </span>
+                <span class="h-1.5 w-1.5 rounded-full bg-slate-600"></span>
+                <span class="text-slate-300 text-xs font-semibold tracking-wide flex items-center gap-2">
+                    <i class="fa-solid fa-trophy text-amber-400"></i>
+                    <span>This is a hackathon project built for <strong>PSB's Cybersecurity, Fraud & Artificial Intelligence Hackathon 2026</strong> in collaboration with <strong>IIT Hyderabad</strong></span>
+                </span>
+                <span class="h-1.5 w-1.5 rounded-full bg-slate-600"></span>
+            </div>
+            <!-- Duplicate content for seamless loop -->
+            <div class="ticker-content flex shrink-0 gap-16 items-center px-6" aria-hidden="true">
+                <span class="text-slate-300 text-xs font-semibold tracking-wide flex items-center gap-2">
+                    <i class="fa-solid fa-trophy text-amber-400"></i>
+                    <span>This is a hackathon project built for <strong>PSB's Cybersecurity, Fraud & Artificial Intelligence Hackathon 2026</strong> in collaboration with <strong>IIT Hyderabad</strong></span>
+                </span>
+                <span class="h-1.5 w-1.5 rounded-full bg-slate-600"></span>
+                <span class="text-slate-300 text-xs font-semibold tracking-wide flex items-center gap-2">
+                    <i class="fa-solid fa-trophy text-amber-400"></i>
+                    <span>This is a hackathon project built for <strong>PSB's Cybersecurity, Fraud & Artificial Intelligence Hackathon 2026</strong> in collaboration with <strong>IIT Hyderabad</strong></span>
+                </span>
+                <span class="h-1.5 w-1.5 rounded-full bg-slate-600"></span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Container -->
+    <div class="max-w-[1600px] mx-auto py-6 px-4 md:px-8">
+
+        <!-- Header -->
+        <header class="flat-panel p-5 mb-6 flex flex-col md:flex-row justify-between items-center gap-4">
+            <div class="flex items-center gap-4">
+                <div class="h-10 w-10 rounded bg-slate-950 flex items-center justify-center text-white text-xl shadow-sm">
+                    <i class="fa-solid fa-building-columns"></i>
+                </div>
+                <div>
+                    <h1 class="text-xl font-extrabold tracking-tight bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">MuleTrace (MTX)</h1>
+                    <p class="text-xs text-slate-500">Anti-Money Laundering (AML) money-mule classification and graph analytics platform</p>
+                </div>
+            </div>
+            
+            <!-- Connection Status -->
+            <div class="flex items-center gap-3">
+                <div id="status-badge" class="flex items-center gap-2 px-3 py-1.5 rounded text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                    <span class="h-2 w-2 rounded-full bg-emerald-600"></span>
+                    AML API Connected
+                </div>
+                <div class="text-xs text-slate-500 font-mono">
+                    System Time: 18:07:12
+                </div>
+            </div>
+        </header>
+
+    <!-- Main Grid Layout -->
+    <main class="grid grid-cols-1 xl:grid-cols-3 gap-6">
+
+        <!-- Left: Control panel & Screener -->
+        <section class="xl:col-span-1 flex flex-col gap-6">
+            
+            <!-- Engine Configuration Panel -->
+            <div class="flat-panel p-6 flex flex-col gap-4">
+                <h2 class="text-sm font-bold text-slate-800 uppercase tracking-wider border-b border-slate-200 pb-2">
+                    <i class="fa-solid fa-sliders text-blue-600 mr-2"></i> Engine Configuration
+                </h2>
+                
+                <!-- Engine Selector -->
+                <div>
+                    <label class="block text-xs font-semibold text-slate-500 mb-2 uppercase">Classification Engine</label>
+                    <div class="grid grid-cols-2 gap-2 bg-slate-100 p-1 rounded border border-slate-200">
+                        <button onclick="changeEngine('xgboost')" id="btn-xgb" class="py-2 px-3 rounded text-xs font-semibold transition-all duration-200 bg-blue-600 text-white shadow-sm">
+                            XGBoost (High Precision)
+                        </button>
+                        <button onclick="changeEngine('lightgbm')" id="btn-lgb" class="py-2 px-3 rounded text-xs font-semibold transition-all duration-200 text-slate-500 hover:text-slate-900">
+                            LightGBM (High Recall)
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Custom Slider -->
+                <div>
+                    <div class="flex justify-between items-center mb-1">
+                        <label class="text-xs font-semibold text-slate-500 uppercase">Alert Risk Threshold</label>
+                        <span id="threshold-val" class="text-xs font-bold text-blue-600">0.50</span>
+                    </div>
+                    <input type="range" id="threshold-slider" min="0.05" max="0.95" step="0.05" value="0.50" 
+                           oninput="onThresholdChange(this.value)"
+                           class="w-full h-1.5 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-blue-600">
+                    <div class="flex justify-between text-[10px] text-slate-500 mt-1 font-mono">
+                        <span>Sensitive (0.05)</span>
+                        <span>0.50</span>
+                        <span>Conservative (0.95)</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Accounts Screener & Sandbox Tabs -->
+            <div class="flat-panel p-6 flex-grow flex flex-col gap-4 min-h-[490px]">
+                <!-- Tab Headers -->
+                <div class="flex border-b border-slate-200 p-0.5 gap-3 text-xs">
+                    <button onclick="switchLeftTab('queue')" id="left-tab-btn-queue" class="pb-2 font-bold text-blue-600 border-b-2 border-blue-600 px-1">
+                        <i class="fa-solid fa-folder-open mr-1"></i> Alert Queue
+                    </button>
+                    <button onclick="switchLeftTab('sandbox')" id="left-tab-btn-sandbox" class="pb-2 font-bold text-slate-500 hover:text-slate-800 px-1">
+                        <i class="fa-solid fa-user-gear mr-1"></i> Compliance Sandbox
+                    </button>
+                </div>
+
+                <!-- Tab 1: Alert Queue -->
+                <div id="left-tab-content-queue" class="flex flex-col gap-3 flex-grow">
+                    <!-- Search box -->
+                    <div class="relative">
+                        <input type="text" id="screener-search" placeholder="Search Account ID..." 
+                               oninput="filterAccounts(this.value)"
+                               class="w-full bg-white border border-slate-300 rounded py-2 px-9 text-xs text-slate-800 focus:outline-none focus:border-blue-600 focus:ring-1 focus:ring-blue-600">
+                        <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-3 text-slate-400 text-xs"></i>
+                    </div>
+
+                    <!-- List container -->
+                    <div class="flex-grow overflow-y-auto max-h-[340px] scrollable-list pr-1 flex flex-col gap-2" id="accounts-container">
+                        <div class="text-center py-12 text-slate-400 text-xs">
+                            <i class="fa-solid fa-spinner animate-spin text-blue-600 text-xl mb-2 block"></i>
+                            Loading account records...
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Tab 2: Compliance Sandbox -->
+                <div id="left-tab-content-sandbox" class="hidden flex flex-col gap-3 flex-grow">
+                    <p class="text-[10px] text-slate-500">
+                        Auditing simulation: Select a cohort template or clone a customer profile, then perturb parameters to test hypothetical risk scenarios.
+                    </p>
+                    
+                    <!-- Base Template Selector -->
+                    <div class="flex flex-col gap-1 border-b border-slate-200 pb-3">
+                        <label class="text-[9px] font-bold text-slate-500 uppercase">Base Profile Cohort</label>
+                        <select id="sb-base-cohort" onchange="onCohortTemplateChange(this.value)" class="bg-white border border-slate-300 rounded p-1.5 text-xs text-slate-800 focus:outline-none focus:border-blue-600 focus:ring-1 focus:ring-blue-600 font-medium">
+                            <option value="global_clean" selected>Global Clean Baseline (Clean Medians)</option>
+                            <option value="clean_student">Clean Student Cohort Medians</option>
+                            <option value="mule_student">Student Mule Cohort Medians</option>
+                            <option value="clean_housewife">Clean Housewife Cohort Medians</option>
+                            <option value="mule_housewife">Housewife Mule Cohort Medians</option>
+                            <option value="clean_salaried">Clean Salaried Cohort Medians</option>
+                            <option value="clean_selfemployed">Clean Self-Employed Cohort Medians</option>
+                            <option value="mule_selfemployed">Self-Employed Mule Cohort Medians</option>
+                        </select>
+                    </div>
+                    
+                    <!-- Form fields -->
+                    <div class="flex-grow overflow-y-auto max-h-[380px] scrollable-list pr-1 flex flex-col gap-2">
+                        <!-- 8 Core Parameters -->
+                        <div class="grid grid-cols-2 gap-2">
+                            <div class="flex flex-col gap-0.5 col-span-2">
+                                <label class="text-[9px] font-bold text-slate-500 uppercase">Account Type (F3886)</label>
+                                <select id="sb-account-type" class="bg-white border border-slate-300 rounded p-1.5 text-xs text-slate-800 focus:outline-none focus:border-blue-600 focus:ring-1 focus:ring-blue-600 font-medium">
+                                    <option value="Savings" selected>Savings</option>
+                                    <option value="Current">Current</option>
+                                    <option value="Agri Adv">Agri Adv</option>
+                                    <option value="Gold Loan">Gold Loan</option>
+                                    <option value="Term Deposit">Term Deposit</option>
+                                    <option value="Corp Adv">Corp Adv</option>
+                                    <option value="HL">HL (Home Loan)</option>
+                                    <option value="ML">ML (Mortgage Loan)</option>
+                                    <option value="PL">PL (Personal Loan)</option>
+                                    <option value="Retail Others">Retail Others</option>
+                                    <option value="All Others">All Others</option>
+                                </select>
+                            </div>
+                            
+                            <div class="flex flex-col gap-0.5 col-span-2">
+                                <label class="text-[9px] font-bold text-slate-500 uppercase">Occupation (F3891)</label>
+                                <select id="sb-occupation" class="bg-white border border-slate-300 rounded p-1.5 text-xs text-slate-800 focus:outline-none focus:border-blue-600 focus:ring-1 focus:ring-blue-600 font-medium">
+                                    <option value="salaried" selected>Salaried</option>
+                                    <option value="selfemployed">Self-Employed</option>
+                                    <option value="student">Student</option>
+                                    <option value="retired">Retired</option>
+                                    <option value="housewife">Housewife</option>
+                                    <option value="agriculture">Agriculture</option>
+                                    <option value="others">Others</option>
+                                </select>
+                            </div>
+
+                            <div class="flex flex-col gap-0.5">
+                                <label class="text-[9px] font-bold text-slate-500 uppercase">Branch Code (F3887)</label>
+                                <input type="number" id="sb-branch" value="94" class="bg-white border border-slate-300 rounded p-1.5 text-xs text-slate-800 focus:outline-none focus:border-blue-600 focus:ring-1 focus:ring-blue-600 font-medium">
+                            </div>
+                            <div class="flex flex-col gap-0.5">
+                                <label class="text-[9px] font-bold text-slate-500 uppercase">Tx Freq / Day (F321)</label>
+                                <input type="number" step="0.01" id="sb-freq" value="1.0" class="bg-white border border-slate-300 rounded p-1.5 text-xs text-slate-800 focus:outline-none focus:border-blue-600 focus:ring-1 focus:ring-blue-600 font-medium">
+                            </div>
+
+                            <div class="flex flex-col gap-0.5">
+                                <label class="text-[9px] font-bold text-slate-500 uppercase">Avg Balance (F3811)</label>
+                                <input type="number" id="sb-balance" value="50000" class="bg-white border border-slate-300 rounded p-1.5 text-xs text-slate-800 focus:outline-none focus:border-blue-600 focus:ring-1 focus:ring-blue-600 font-medium">
+                            </div>
+                            <div class="flex flex-col gap-0.5">
+                                <label class="text-[9px] font-bold text-slate-500 uppercase">Velocity Score (F2582)</label>
+                                <input type="number" step="0.01" id="sb-velocity" value="0.0" class="bg-white border border-slate-300 rounded p-1.5 text-xs text-slate-800 focus:outline-none focus:border-blue-600 focus:ring-1 focus:ring-blue-600 font-medium">
+                            </div>
+
+                            <div class="flex flex-col gap-0.5">
+                                <label class="text-[9px] font-bold text-slate-500 uppercase">Customer Age (F3894)</label>
+                                <input type="number" id="sb-age" value="34" class="bg-white border border-slate-300 rounded p-1.5 text-xs text-slate-800 focus:outline-none focus:border-blue-600 focus:ring-1 focus:ring-blue-600 font-medium">
+                            </div>
+                            <div class="flex flex-col gap-0.5">
+                                <label class="text-[9px] font-bold text-slate-500 uppercase">Fraud Link (F670)</label>
+                                <select id="sb-fraud-link" class="bg-white border border-slate-300 rounded p-1.5 text-xs text-slate-800 focus:outline-none focus:border-blue-600 focus:ring-1 focus:ring-blue-600 font-medium">
+                                    <option value="0.0" selected>0 (Safe)</option>
+                                    <option value="1.0">1 (Linked)</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <!-- 12 Extended Parameters -->
+                        <details class="group mt-2 border border-slate-200 rounded">
+                            <summary class="p-2 text-xs font-bold text-slate-700 bg-slate-100 cursor-pointer flex justify-between items-center hover:bg-slate-200">
+                                <span><i class="fa-solid fa-magnifying-glass-chart mr-1.5 text-blue-600"></i> Extended Forensic Parameters</span>
+                                <i class="fa-solid fa-chevron-down group-open:rotate-180 transition-transform"></i>
+                            </summary>
+                            <div class="p-3 grid grid-cols-2 gap-2 bg-white border-t border-slate-200 text-xs">
+                                <div class="flex flex-col gap-0.5">
+                                    <label class="text-[8px] font-bold text-slate-500 uppercase">Daily Limit Ratio (F115)</label>
+                                    <input type="number" step="0.01" id="sb-f115" value="0.5" class="bg-white border border-slate-300 rounded p-1 text-[10px] text-slate-800 focus:outline-none focus:border-blue-600">
+                                </div>
+                                <div class="flex flex-col gap-0.5">
+                                    <label class="text-[8px] font-bold text-slate-500 uppercase">Active Window (F3889)</label>
+                                    <select id="sb-f3889" class="bg-white border border-slate-300 rounded p-1 text-[10px] text-slate-800 focus:outline-none focus:border-blue-600">
+                                        <option value="G365D" selected>G365D</option>
+                                        <option value="L365D">L365D</option>
+                                        <option value="L180D">L180D</option>
+                                        <option value="L90D">L90D</option>
+                                        <option value="L31D">L31D</option>
+                                        <option value="L14D">L14D</option>
+                                        <option value="L7D">L7D</option>
+                                    </select>
+                                </div>
+                                <div class="flex flex-col gap-0.5">
+                                    <label class="text-[8px] font-bold text-slate-500 uppercase">Tx Activity A (F527)</label>
+                                    <input type="number" step="0.01" id="sb-f527" value="1.0" class="bg-white border border-slate-300 rounded p-1 text-[10px] text-slate-800 focus:outline-none focus:border-blue-600">
+                                </div>
+                                <div class="flex flex-col gap-0.5">
+                                    <label class="text-[8px] font-bold text-slate-500 uppercase">Tx Activity B (F531)</label>
+                                    <input type="number" step="0.01" id="sb-f531" value="1.2" class="bg-white border border-slate-300 rounded p-1 text-[10px] text-slate-800 focus:outline-none focus:border-blue-600">
+                                </div>
+                                <div class="flex flex-col gap-0.5">
+                                    <label class="text-[8px] font-bold text-slate-500 uppercase">Hi-Risk Transfers (F1692)</label>
+                                    <input type="number" id="sb-f1692" value="0" class="bg-white border border-slate-300 rounded p-1 text-[10px] text-slate-800 focus:outline-none focus:border-blue-600">
+                                </div>
+                                <div class="flex flex-col gap-0.5">
+                                    <label class="text-[8px] font-bold text-slate-500 uppercase">Net Assoc Score A (F2082)</label>
+                                    <input type="number" step="0.01" id="sb-f2082" value="0.0" class="bg-white border border-slate-300 rounded p-1 text-[10px] text-slate-800 focus:outline-none focus:border-blue-600">
+                                </div>
+                                <div class="flex flex-col gap-0.5">
+                                    <label class="text-[8px] font-bold text-slate-500 uppercase">Net Assoc Score B (F2122)</label>
+                                    <input type="number" step="0.01" id="sb-f2122" value="0.0" class="bg-white border border-slate-300 rounded p-1 text-[10px] text-slate-800 focus:outline-none focus:border-blue-600">
+                                </div>
+                                <div class="flex flex-col gap-0.5">
+                                    <label class="text-[8px] font-bold text-slate-500 uppercase">Device Vel Index (F2678)</label>
+                                    <input type="number" step="0.01" id="sb-f2678" value="0.0" class="bg-white border border-slate-300 rounded p-1 text-[10px] text-slate-800 focus:outline-none focus:border-blue-600">
+                                </div>
+                                <div class="flex flex-col gap-0.5">
+                                    <label class="text-[8px] font-bold text-slate-500 uppercase">Loc Change Speed (F2737)</label>
+                                    <input type="number" step="0.01" id="sb-f2737" value="0.0" class="bg-white border border-slate-300 rounded p-1 text-[10px] text-slate-800 focus:outline-none focus:border-blue-600">
+                                </div>
+                                <div class="flex flex-col gap-0.5">
+                                    <label class="text-[8px] font-bold text-slate-500 uppercase">Off-Hrs Logins (F2956)</label>
+                                    <input type="number" id="sb-f2956" value="64" class="bg-white border border-slate-300 rounded p-1 text-[10px] text-slate-800 focus:outline-none focus:border-blue-600">
+                                </div>
+                                <div class="flex flex-col gap-0.5">
+                                    <label class="text-[8px] font-bold text-slate-500 uppercase">Alert Freq Index (F3043)</label>
+                                    <input type="number" id="sb-f3043" value="87" class="bg-white border border-slate-300 rounded p-1 text-[10px] text-slate-800 focus:outline-none focus:border-blue-600">
+                                </div>
+                                <div class="flex flex-col gap-0.5">
+                                    <label class="text-[8px] font-bold text-slate-500 uppercase">Net Balance Ind. (F3836)</label>
+                                    <input type="number" id="sb-f3836" value="381286" class="bg-white border border-slate-300 rounded p-1 text-[10px] text-slate-800 focus:outline-none focus:border-blue-600">
+                                </div>
+                            </div>
+                        </details>
+                    </div>
+                    
+                    <button onclick="runSandboxAssessment()" class="w-full py-2 rounded text-xs font-bold bg-slate-900 hover:bg-slate-800 text-white transition-colors mt-2 shadow-sm">
+                        <i class="fa-solid fa-shield-halved mr-1.5"></i> Run Risk Assessment
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <!-- Right Panels: Inspector, Explainers, SAR, Network -->
+        <section class="xl:col-span-2 flex flex-col gap-6">
+            
+            <!-- Real-time performance statistics cards -->
+            <div class="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                <div class="flat-panel p-4 flex flex-col">
+                    <span class="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Total Records Loaded</span>
+                    <span id="stat-total" class="text-xl font-bold text-slate-900 mt-1">50</span>
+                </div>
+                <div class="flat-panel p-4 flex flex-col">
+                    <span class="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Flagged Suspects</span>
+                    <span id="stat-alerts" class="text-xl font-bold text-rose-600 mt-1">15</span>
+                </div>
+                <div class="flat-panel p-4 flex flex-col">
+                    <span class="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Normal Accounts</span>
+                    <span id="stat-clean" class="text-xl font-bold text-emerald-600 mt-1">35</span>
+                </div>
+                <div class="flat-panel p-4 flex flex-col">
+                    <span id="stat-metric-label" class="text-[10px] font-bold text-slate-500 uppercase tracking-wider">XGBoost PR-AUC</span>
+                    <span id="stat-accuracy" class="text-xl font-bold text-blue-600 mt-1">94.04%</span>
+                </div>
+            </div>
+
+            <!-- Risk Inspector Panel -->
+            <div class="flat-panel p-6 grid grid-cols-1 lg:grid-cols-12 gap-6 min-h-[460px]">
+                
+                <!-- Left half: Account Profile details -->
+                <div class="lg:col-span-5 flex flex-col gap-4 border-r border-slate-200 pr-0 lg:pr-6">
+                    <div>
+                        <div class="flex justify-between items-start mb-2">
+                            <div>
+                                <span class="text-[10px] font-bold text-slate-500 uppercase">Inspecting Profile</span>
+                                <h3 id="inspect-id" class="text-lg font-bold text-slate-900">ACC00000</h3>
+                            </div>
+                            <span id="inspect-badge" class="px-2 py-0.5 rounded text-[10px] font-bold bg-slate-100 border border-slate-200 text-slate-600">
+                                Unrated
+                            </span>
+                        </div>
+                        
+                        <!-- Score Display -->
+                        <div class="bg-slate-50 p-4 rounded border border-slate-200 text-center mt-2">
+                            <span class="text-[10px] font-semibold text-slate-500 uppercase tracking-wider">Evaluated Risk Probability</span>
+                            <div class="text-2xl font-bold text-slate-900 mt-1" id="inspect-score-txt">0.00%</div>
+                            <div class="w-full bg-slate-200 rounded-full h-1.5 mt-2">
+                                <div id="inspect-score-bar" class="bg-blue-600 h-1.5 rounded-full transition-all duration-300" style="width: 0%"></div>
+                            </div>
+                            <span class="text-[9px] text-slate-500 block mt-2" id="inspect-model-meta">XGBoost default (t=0.50)</span>
+                        </div>
+                    </div>
+
+                    <!-- Selected Account features -->
+                    <div class="flex-grow flex flex-col gap-2 justify-end">
+                        <h4 class="text-xs font-bold text-slate-700 uppercase tracking-wider border-b border-slate-200 pb-1">Core Identifiers</h4>
+                        <div class="grid grid-cols-2 gap-x-3 gap-y-2 text-xs">
+                            <div class="flex flex-col">
+                                <span class="text-[9px] text-slate-500 uppercase font-medium">Account Type (F3886)</span>
+                                <span class="font-semibold text-slate-800 mt-0.5" id="feat-f3886">-</span>
+                            </div>
+                            <div class="flex flex-col">
+                                <span class="text-[9px] text-slate-500 uppercase font-medium">Occupation (F3891)</span>
+                                <span class="font-semibold text-slate-800 mt-0.5" id="feat-f3891">-</span>
+                            </div>
+                            <div class="flex flex-col">
+                                <span class="text-[9px] text-slate-500 uppercase font-medium">Bank Branch (F3887)</span>
+                                <span class="font-semibold text-slate-800 mt-0.5" id="feat-f3887">-</span>
+                            </div>
+                            <div class="flex flex-col">
+                                <span class="text-[9px] text-slate-500 uppercase font-medium">Tx Freq / Day (F321)</span>
+                                <span class="font-semibold text-slate-800 mt-0.5" id="feat-f321">-</span>
+                            </div>
+                            <div class="flex flex-col">
+                                <span class="text-[9px] text-slate-500 uppercase font-medium">Avg Balance (F3811)</span>
+                                <span class="font-semibold text-slate-800 mt-0.5" id="feat-f3811">-</span>
+                            </div>
+                            <div class="flex flex-col">
+                                <span class="text-[9px] text-slate-500 uppercase font-medium">Velocity Score (F2582)</span>
+                                <span class="font-semibold text-slate-800 mt-0.5" id="feat-f2582">-</span>
+                            </div>
+                            <div class="flex flex-col">
+                                <span class="text-[9px] text-slate-500 uppercase font-medium">Customer Age (F3894)</span>
+                                <span class="font-semibold text-slate-800 mt-0.5" id="feat-f3894">-</span>
+                            </div>
+                            <div class="flex flex-col">
+                                <span class="text-[9px] text-slate-500 uppercase font-medium">Fraud Link (F670)</span>
+                                <span class="font-semibold text-slate-800 mt-0.5" id="feat-f670">-</span>
+                            </div>
+                        </div>
+                        <button onclick="cloneSelectedToSandbox()" class="w-full py-1.5 px-3 rounded text-[11px] font-bold bg-slate-100 hover:bg-slate-200 border border-slate-300 text-slate-700 hover:text-slate-900 transition-all mt-3 flex items-center justify-center gap-1.5 shadow-sm">
+                            <i class="fa-solid fa-copy"></i> Clone to Sandbox for Auditing
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Right half: Explainable AI / SAR Tab views -->
+                <div class="lg:col-span-7 flex flex-col gap-4">
+                    <!-- Nav Tabs -->
+                    <div class="flex border-b border-slate-200 p-0.5 gap-3 text-xs">
+                        <button onclick="switchTab('xai')" id="tab-btn-xai" class="pb-2 font-bold text-blue-600 border-b-2 border-blue-600 px-1">
+                            <i class="fa-solid fa-brain mr-1"></i> Explainable AI (XAI)
+                        </button>
+                        <button onclick="switchTab('sar')" id="tab-btn-sar" class="pb-2 font-bold text-slate-500 hover:text-slate-800 px-1">
+                            <i class="fa-solid fa-file-signature mr-1"></i> SAR Document
+                        </button>
+                    </div>
+
+                    <!-- XAI Drivers Tab content -->
+                    <div id="tab-content-xai" class="flex-grow flex flex-col gap-3">
+                        <div id="xai-narrative-summary"></div>
+                        <div class="flex justify-between items-center bg-slate-50 p-2.5 rounded border border-slate-200 text-[10px] text-slate-600">
+                            <div>
+                                <span class="font-bold text-slate-800 block">Explainable AI Framework: Local Feature Attribution (LFA)</span>
+                                Attribution: $(X_i - \mu_i) \times \text{Importance}_i$ relative to baseline clean medians.
+                            </div>
+                        </div>
+                        
+                        <!-- List of driver bars -->
+                        <div class="flex-grow flex flex-col gap-2.5 justify-center" id="xai-drivers-list">
+                            <div class="text-center py-12 text-slate-400 text-xs">
+                                Select an account to view XAI drivers.
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- SAR Tab content -->
+                    <div id="tab-content-sar" class="hidden flex-grow flex flex-col gap-3">
+                        <textarea id="sar-textarea" readonly 
+                                  class="w-full flex-grow bg-slate-50 border border-slate-300 rounded p-3 text-xs text-slate-800 font-mono resize-none focus:outline-none min-h-[220px]">
+                        </textarea>
+                        <div class="flex justify-end gap-2 text-xs">
+                            <button onclick="copySAR()" class="py-1.5 px-3 rounded font-bold bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-300 transition-colors flex items-center gap-1.5 shadow-sm">
+                                <i class="fa-solid fa-copy"></i> Copy SAR Text
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Network Graph Panel -->
+        <section class="xl:col-span-3 mt-4">
+            <div class="flat-panel p-6 flex flex-col gap-3">
+                <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-3 border-b border-slate-200 pb-2">
+                    <div>
+                        <h2 class="text-sm font-bold text-slate-800 uppercase tracking-wider">
+                            <i class="fa-solid fa-circle-nodes text-blue-600 mr-2"></i> Entity resolution network linkage map
+                        </h2>
+                        <p class="text-xs text-slate-500">This graph connects active records that share identical registration profiles (Branch F3887 & Occupation F3891).</p>
+                    </div>
+                    
+                    <!-- Color Indicators -->
+                    <div class="flex items-center gap-3 text-[10px] font-semibold text-slate-500">
+                        <div class="flex items-center gap-1.5"><span class="h-2.5 w-2.5 rounded bg-emerald-600"></span> Legitimate Node</div>
+                        <div class="flex items-center gap-1.5"><span class="h-2.5 w-2.5 rounded bg-rose-600"></span> Suspect Mule Node</div>
+                        <div class="flex items-center gap-1.5 border-l border-slate-200 pl-3">Edges: Shared branch & profile mappings</div>
+                    </div>
+                </div>
+                <!-- Network Graph Canvas -->
+                <div id="network-graph" class="w-full h-[380px] bg-white rounded border border-slate-200 relative">
+                    <div id="graph-loader" class="absolute inset-0 bg-white/95 rounded flex items-center justify-center text-slate-500 text-xs z-10">
+                        <i class="fa-solid fa-spinner animate-spin text-blue-600 text-2xl mb-2 block"></i>
+                        Initializing transaction graph...
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- UI State Control Scripts -->
+    <script>
+        const API_URL = window.location.protocol === "file:" ? "http://127.0.0.1:8000" : window.location.origin;
+        let accounts = [];
+        let selectedAccount = null;
+        let activeEngine = "xgboost";
+        let activeThreshold = 0.50;
+        let activeTab = "xai";
+        
+        let nodes, edges, network;
+        let cachedMetrics = {};
+        let globalHybridFeatures = [];
+        let globalMedians = {};
+        let globalCohortMedians = {};
+        let sandboxBaseProfile = {};
+
+        document.addEventListener("DOMContentLoaded", () => {
+            initApp();
+        });
+
+        // App Bootstrapper
+        async function initApp() {
+            try {
+                // Fetch cached evaluation metrics
+                const resMetrics = await fetch(`${API_URL}/status`); // using status API
+                const statusData = await resMetrics.json();
+                
+                // Now get metrics
+                const metricsRes = await fetch(`${API_URL}/metrics`);
+                cachedMetrics = await metricsRes.json();
+                updateMetricsDisplay();
+
+                // Fetch metadata for sandbox evaluation
+                const resMeta = await fetch(`${API_URL}/metadata`);
+                const metaData = await resMeta.json();
+                globalHybridFeatures = metaData.hybrid_features;
+                globalMedians = metaData.medians;
+                globalCohortMedians = metaData.cohort_medians || {};
+                
+                // Initialize default sandbox profile
+                onCohortTemplateChange("global_clean");
+
+                // Fetch database accounts
+                const resAccounts = await fetch(`${API_URL}/accounts`);
+                accounts = await resAccounts.json();
+                
+                // Start batch predictions
+                await batchPredictAllAccounts();
+
+                renderAccountsList();
+                initNetworkGraph();
+
+                if (accounts.length > 0) {
+                    selectAccount(accounts[0].account_id);
+                }
+
+                const loader = document.getElementById("graph-loader");
+                if (loader) {
+                    loader.classList.add("hidden");
+                }
+                
+            } catch (err) {
+                const statusBadge = document.getElementById("status-badge");
+                if (statusBadge) {
+                    statusBadge.className = "flex items-center gap-2 px-3 py-1.5 rounded text-xs font-semibold bg-rose-50 text-rose-700 border border-rose-200";
+                    statusBadge.innerHTML = `<span class="h-2 w-2 rounded-full bg-rose-600"></span> AML API Offline`;
+                }
+                const container = document.getElementById("accounts-container");
+                container.innerHTML = `
+                    <div class="text-center py-12 text-rose-600 text-xs">
+                        <i class="fa-solid fa-triangle-exclamation text-rose-600 text-2xl mb-2 block"></i>
+                        FastAPI backend server is offline.<br>
+                        <span class="text-slate-500 block mt-1">Please start 'python app.py' in the MuleTrace directory.</span>
+                        <span class="text-rose-700 font-mono block mt-3 p-2 bg-rose-50 rounded border border-rose-200 max-w-md mx-auto text-[10px] break-all text-left">Error: ${err.message || err}<br>Stack: ${err.stack || 'No Stack Trace'}</span>
+                    </div>
+                `;
+            }
+        }
+
+        // Run batch evaluation of all loaded accounts to sync risk probabilities
+        async function batchPredictAllAccounts() {
+            for (let i = 0; i < accounts.length; i++) {
+                const acc = accounts[i];
+                try {
+                    const reqBody = {
+                        features: acc,
+                        engine: activeEngine,
+                        threshold: activeThreshold
+                    };
+                    if (acc.base_features) {
+                        reqBody.base_features = acc.base_features;
+                    }
+                    const res = await fetch(`${API_URL}/predict`, {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify(reqBody)
+                    });
+                    const data = await res.json();
+                    acc.predicted_prob = data.probability;
+                } catch (e) {
+                    console.error(e);
+                    acc.predicted_prob = 0.0;
+                }
+            }
+        }
+
+        // Render table records
+        function renderAccountsList() {
+            const container = document.getElementById("accounts-container");
+            container.innerHTML = "";
+            
+            accounts.forEach(acc => {
+                const prob = acc.predicted_prob || 0.0;
+                const isSelected = selectedAccount && selectedAccount.account_id === acc.account_id;
+                
+                const card = document.createElement("div");
+                card.className = `p-3 rounded border transition-all duration-150 cursor-pointer flex justify-between items-center ${
+                    isSelected ? 'bg-blue-50 border-blue-400' : 'bg-slate-50 hover:bg-slate-100 border-slate-200'
+                }`;
+                card.onclick = () => selectAccount(acc.account_id);
+                
+                let barColor = "bg-emerald-600";
+                let textCol = "text-emerald-600";
+                if (prob >= activeThreshold) {
+                    barColor = "bg-rose-600";
+                    textCol = "text-rose-600 font-bold";
+                } else if (prob >= activeThreshold * 0.6) {
+                    barColor = "bg-yellow-600";
+                    textCol = "text-yellow-600 font-semibold";
+                }
+                
+                card.innerHTML = `
+                    <div class="flex flex-col gap-0.5">
+                        <div class="flex items-center gap-1.5">
+                            <span class="font-bold text-slate-900 text-xs">${acc.account_id}</span>
+                            <span class="text-[9px] px-1 py-0.5 rounded uppercase font-semibold ${
+                                acc.is_mule ? 'bg-rose-50 text-rose-700 border border-rose-200' : 'bg-slate-200 text-slate-600'
+                            }">${acc.is_mule ? 'Mule' : 'Legit'}</span>
+                        </div>
+                        <div class="w-24 bg-slate-200 rounded-full h-1 mt-1.5">
+                            <div class="${barColor} h-1 rounded-full" style="width: ${prob * 100}%"></div>
+                        </div>
+                    </div>
+                    <div class="text-right">
+                        <span class="text-xs ${textCol}">${(prob * 100).toFixed(1)}%</span>
+                        <span class="block text-[9px] text-slate-500">Prob.</span>
+                    </div>
+                `;
+                container.appendChild(card);
+            });
+            
+            updateMetricsCounters();
+        }
+
+        // Handle Alert Threshold Change
+        function onThresholdChange(val) {
+            activeThreshold = parseFloat(val);
+            document.getElementById("threshold-val").innerText = activeThreshold.toFixed(2);
+            
+            if (selectedAccount) {
+                runPrediction(selectedAccount);
+            }
+            renderAccountsList();
+            updateNetworkNodeStates();
+        }
+
+        // Change Model Engine Toggle
+        function changeEngine(engine) {
+            activeEngine = engine;
+            
+            const btnXgb = document.getElementById("btn-xgb");
+            const btnLgb = document.getElementById("btn-lgb");
+            
+            if (engine === "xgboost") {
+                btnXgb.className = "py-2 px-3 rounded text-xs font-semibold transition-all duration-200 bg-blue-600 text-white shadow-sm";
+                btnLgb.className = "py-2 px-3 rounded text-xs font-semibold transition-all duration-200 text-slate-500 hover:text-slate-900";
+                document.getElementById("stat-metric-label").innerText = "XGBoost PR-AUC";
+            } else {
+                btnLgb.className = "py-2 px-3 rounded text-xs font-semibold transition-all duration-200 bg-blue-600 text-white shadow-sm";
+                btnXgb.className = "py-2 px-3 rounded text-xs font-semibold transition-all duration-200 text-slate-500 hover:text-slate-900";
+                document.getElementById("stat-metric-label").innerText = "LightGBM PR-AUC";
+            }
+            
+            updateMetricsDisplay();
+            repredictAndRefresh();
+        }
+
+        // Batch update predictions and refresh UI
+        async function repredictAndRefresh() {
+            await batchPredictAllAccounts();
+            if (selectedAccount) {
+                const match = accounts.find(a => a.account_id === selectedAccount.account_id);
+                if (match) selectedAccount.predicted_prob = match.predicted_prob;
+                runPrediction(selectedAccount);
+            }
+            renderAccountsList();
+            updateNetworkNodeStates();
+        }
+
+        // Update validation PR-AUC card
+        function updateMetricsDisplay() {
+            if (!cachedMetrics || !cachedMetrics[activeEngine]) return;
+            const metrics = cachedMetrics[activeEngine];
+            document.getElementById("stat-accuracy").innerText = `${(metrics.pr_auc * 100).toFixed(2)}%`;
+        }
+
+        // Recalculate record metrics
+        function updateMetricsCounters() {
+            const total = accounts.length;
+            const alerts = accounts.filter(a => (a.predicted_prob || 0.0) >= activeThreshold).length;
+            const clean = total - alerts;
+            
+            document.getElementById("stat-total").innerText = total;
+            document.getElementById("stat-alerts").innerText = alerts;
+            document.getElementById("stat-clean").innerText = clean;
+        }
+
+        // Select Account row
+        async function selectAccount(accountId) {
+            const account = accounts.find(acc => acc.account_id === accountId);
+            if (!account) return;
+            
+            selectedAccount = account;
+            renderAccountsList();
+            
+            document.getElementById("inspect-id").innerText = account.account_id;
+            
+            // Fill identifiers
+            document.getElementById("feat-f3886").innerText = account.F3886 || "N/A";
+            document.getElementById("feat-f3891").innerText = account.F3891 || "N/A";
+            document.getElementById("feat-f3887").innerText = account.F3887 !== null ? account.F3887 : "N/A";
+            document.getElementById("feat-f321").innerText = account.F321 !== null ? Number(account.F321).toFixed(3) : "N/A";
+            document.getElementById("feat-f3811").innerText = account.F3811 !== null ? Math.round(account.F3811).toLocaleString() : "N/A";
+            document.getElementById("feat-f2582").innerText = account.F2582 !== null ? Number(account.F2582).toFixed(3) : "N/A";
+            document.getElementById("feat-f3894").innerText = account.F3894 !== null ? Math.round(account.F3894) : "N/A";
+            document.getElementById("feat-f670").innerText = account.F670 !== null ? (account.F670 === 1 ? "1 (Active)" : "0 (Safe)") : "N/A";
+
+            runPrediction(account);
+            
+            if (network) {
+                network.selectNodes([accountId]);
+                highlightNodeNeighborhood(accountId);
+            }
+        }
+
+        // Single run predict API
+        async function runPrediction(account) {
+            try {
+                const reqBody = {
+                    features: account,
+                    engine: activeEngine,
+                    threshold: activeThreshold
+                };
+                if (account.base_features) {
+                    reqBody.base_features = account.base_features;
+                }
+                const res = await fetch(`${API_URL}/predict`, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify(reqBody)
+                });
+                const data = await res.json();
+                
+                account.predicted_prob = data.probability;
+                
+                const scorePct = (data.probability * 100).toFixed(2);
+                document.getElementById("inspect-score-txt").innerText = `${scorePct}%`;
+                
+                const scoreBar = document.getElementById("inspect-score-bar");
+                scoreBar.style.width = `${scorePct}%`;
+                
+                const badge = document.getElementById("inspect-badge");
+                if (data.flagged) {
+                    scoreBar.className = "bg-rose-600 h-1.5 rounded-full transition-all duration-300";
+                    document.getElementById("inspect-score-txt").className = "text-2xl font-bold text-rose-600 mt-1";
+                    badge.className = "px-2 py-0.5 rounded text-[10px] font-bold bg-rose-50 text-rose-700 border border-rose-200";
+                    badge.innerText = "SUSPECT MULE";
+                } else if (data.probability >= activeThreshold * 0.6) {
+                    scoreBar.className = "bg-yellow-600 h-1.5 rounded-full transition-all duration-300";
+                    document.getElementById("inspect-score-txt").className = "text-2xl font-bold text-yellow-600 mt-1";
+                    badge.className = "px-2 py-0.5 rounded text-[10px] font-bold bg-yellow-50 text-yellow-700 border border-yellow-200";
+                    badge.innerText = "MEDIUM RISK";
+                } else {
+                    scoreBar.className = "bg-emerald-600 h-1.5 rounded-full transition-all duration-300";
+                    document.getElementById("inspect-score-txt").className = "text-2xl font-bold text-emerald-600 mt-1";
+                    badge.className = "px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200";
+                    badge.innerText = "NORMAL";
+                }
+                
+                document.getElementById("inspect-model-meta").innerText = `Model: ${data.engine} | Threshold = ${activeThreshold.toFixed(2)}`;
+                
+                // Update XAI narrative summary and drivers
+                document.getElementById("xai-narrative-summary").innerHTML = generateNarrativeSummary(data, account);
+                renderXAIDrivers(data.top_drivers);
+                generateSARReport(data, account);
+
+            } catch (err) {
+                console.error(err);
+            }
+        }
+
+        // Feature friendly labels dictionary
+        const featLabels = {
+            "F115": "Daily Limit Ratio",
+            "F321": "Tx Freq / Day",
+            "F527": "Tx Activity A",
+            "F531": "Tx Activity B",
+            "F670": "Fraud Link Flag",
+            "F1692": "Hi-Risk Transfer Count",
+            "F2082": "Net Assoc Score A",
+            "F2122": "Net Assoc Score B",
+            "F2582": "Velocity Score",
+            "F2678": "Device Vel Index",
+            "F2737": "Loc Change Speed",
+            "F2956": "Off-Hrs Logins",
+            "F3043": "Alert Freq Index",
+            "F3836": "Net Balance Ind.",
+            "F3887": "Bank Branch",
+            "F3889": "Active Window",
+            "F3891": "Occupation",
+            "F3894": "Customer Age",
+            "F3886": "Account Type",
+            "F3811": "Avg Balance",
+            "F3898": "Mule Proxy Indicator"
+        };
+
+        // Generate Human-Readable Compliance Explanations
+        function generateNlpExplanation(col, val, contrib, median) {
+            const label = featLabels[col] || col;
+            const isRisk = contrib > 0;
+            const valNum = Number(val);
+            
+            let valStr = val;
+            if (val !== null && typeof val === 'number') {
+                valStr = val.toFixed(2);
+                if (Number.isInteger(val)) {
+                    valStr = val.toString();
+                }
+            }
+
+            if (!isRisk) {
+                return `The ${label} of ${valStr} is at a standard level, which aligns with normal legitimate accounts and mitigates risk.`;
+            }
+
+            switch(col) {
+                case "F3891":
+                    const occLower = String(val).toLowerCase();
+                    if (occLower === "student") {
+                        return "Customer is registered as a student. Students are frequently targeted by criminal syndicates for money mule recruitment (easy money scams).";
+                    } else if (occLower === "housewife") {
+                        return "Customer is registered as a housewife. This group is statistically targeted for work-from-home laundering opportunities.";
+                    } else if (occLower === "retired") {
+                        return "Customer is retired, which can sometimes indicate pension diversion or romance-scam mule recruitment.";
+                    } else {
+                        return `Occupation is ${valStr}, which represents an unverified low-earning cohort.`;
+                    }
+                case "F321":
+                    return `Outgoing transaction frequency is ${valStr} transfers/day. High daily transfer frequency indicates rapid money circulation characteristic of active money mules.`;
+                case "F2582":
+                    return `The velocity score is ${valStr}, indicating funds are transferred out almost immediately after receipt to empty the account.`;
+                case "F3811":
+                case "F3836":
+                    return `The net balance is $${Math.round(valNum).toLocaleString()}. Large balances or massive transfers are anomalous for the customer's registered cohort.`;
+                case "F3894":
+                    if (valNum < 23) {
+                        return `Customer is young (${valStr} years old). Under 23 year-olds are the primary demographic targeted for student mule accounts.`;
+                    } else if (valNum > 65) {
+                        return `Customer is elderly (${valStr} years old), suggesting potential account takeover or senior scam victimisation.`;
+                    }
+                    return `Customer is ${valStr} years old, showing cohort risk characteristics.`;
+                case "F670":
+                    return "Active Fraud Link: The entity sharing registry profile is linked directly to a confirmed money mule node in the network map.";
+                case "F1692":
+                    return `High volume of outgoing transfers (${valStr} transfers) to high-risk branches or international accounts.`;
+                case "F2737":
+                    return `Anomalous location changes: Transactions initiated from geographically distant locations in rapid succession (speed: ${valStr} km/h).`;
+                case "F2956":
+                    return `High off-hours access (${valStr} logins): System logins during unusual overnight hours, suggesting automated activity or foreign timezone operation.`;
+                case "F3043":
+                    return `Alert frequency index is ${valStr}, indicating this customer profile has triggered multiple suspicious alerts in recent transaction batches.`;
+                case "F3889":
+                    return `Newly established account (vintage: ${valStr}). High-velocity transactions in brand new accounts are a primary indicator of mule activity.`;
+                case "F3887":
+                    return `Transaction routed through high-risk bank branch #${valStr}, known for high volumes of illicit activity.`;
+                case "F115":
+                    return `Daily limit utilization ratio is ${valStr}, suggesting near-total extraction of daily allowed funds.`;
+                default:
+                    const medStr = median !== undefined ? median.toFixed(2) : "0.00";
+                    return `Feature ${col} (${label}) is at ${valStr}, deviating from the normal clean median of ${medStr}, contributing to higher mule probability.`;
+            }
+        }
+
+        // Generate Synthesized Forensic Narrative
+        function generateNarrativeSummary(predictResult, rawData) {
+            const isMule = predictResult.flagged;
+            const probPct = (predictResult.probability * 100).toFixed(1);
+            
+            if (!isMule) {
+                return `<div class="p-3 bg-emerald-50 text-emerald-800 border border-emerald-200 rounded text-xs leading-relaxed">
+                            <strong><i class="fa-solid fa-circle-check mr-1.5 text-emerald-600"></i> AI Compliance Audit Verdict: Normal Profile</strong><br>
+                            This account is classified as legitimate with a low risk probability of ${probPct}%. Transaction patterns, device registration, and location data align with normal customer behavior. No compliance actions are required.
+                        </div>`;
+            }
+
+            const riskDrivers = predictResult.top_drivers.filter(d => d.contribution > 0);
+            if (riskDrivers.length === 0) {
+                return `<div class="p-3 bg-rose-50 text-rose-800 border border-rose-200 rounded text-xs leading-relaxed">
+                            <strong><i class="fa-solid fa-circle-exclamation mr-1.5 text-rose-600"></i> AI Compliance Audit Verdict: SUSPECT MULE</strong><br>
+                            This account is flagged as a suspect mule with ${probPct}% probability. The classification is driven by a combination of minor behavioral anomalies that exceed the safety threshold.
+                        </div>`;
+            }
+
+            const driverSummaries = riskDrivers.map(drv => {
+                const label = featLabels[drv.feature] || drv.feature;
+                let valStr = drv.value;
+                if (typeof drv.value === 'number') {
+                    valStr = drv.value.toFixed(1);
+                }
+                return `<strong>${label}</strong> (${valStr})`;
+            });
+
+            let narrative = `This account is flagged as a <strong>SUSPECT MULE</strong> with an evaluated risk probability of <strong>${probPct}%</strong>. `;
+            narrative += `The primary drivers triggering this alert are: ${driverSummaries.slice(0, 3).join(', ')}. `;
+            
+            const occ = String(rawData.F3891 || "").toLowerCase();
+            const age = rawData.F3894;
+            const fraudLink = rawData.F670;
+            
+            if (occ === "student" && age < 23) {
+                narrative += `The profile matches a typical student mule recruitment pattern: young age (${age} yrs) combined with high transaction frequency or velocity. `;
+            } else if (occ === "housewife") {
+                narrative += `The profile exhibits housewife mule characteristics, involving anomalous transaction frequency or sudden balance changes. `;
+            }
+            
+            if (fraudLink == 1) {
+                narrative += `Crucially, the entity resolution engine detected a direct shared device or branch linkage (Fraud Link) to another confirmed suspect mule account. `;
+            }
+
+            return `<div class="p-3 bg-rose-50 text-rose-800 border border-rose-200 rounded text-xs leading-relaxed">
+                        <strong><i class="fa-solid fa-circle-exclamation mr-1.5 text-rose-600"></i> AI Compliance Audit Verdict: SUSPECT MULE</strong><br>
+                        ${narrative}
+                    </div>`;
+        }
+
+        // Render Explainable AI drivers list
+        function renderXAIDrivers(drivers) {
+            const list = document.getElementById("xai-drivers-list");
+            list.innerHTML = "";
+            
+            drivers.forEach(drv => {
+                const absContrib = Math.abs(drv.contribution);
+                const pct = Math.min((absContrib * 100), 100).toFixed(0);
+                
+                const isRiskDriver = drv.contribution > 0;
+                const barColor = isRiskDriver ? "bg-rose-600" : "bg-emerald-600";
+                const icon = isRiskDriver ? "fa-circle-plus text-rose-600" : "fa-circle-minus text-emerald-600";
+                const impactText = isRiskDriver ? "Increases Risk" : "Mitigates Risk";
+                const label = featLabels[drv.feature] || drv.feature;
+                const explanation = generateNlpExplanation(drv.feature, drv.value, drv.contribution, globalMedians[drv.feature]);
+                
+                const drvRow = document.createElement("div");
+                drvRow.className = "flex flex-col gap-1 text-xs p-2.5 bg-slate-50 border border-slate-200 rounded";
+                drvRow.innerHTML = `
+                    <div class="flex justify-between items-center">
+                        <span class="font-semibold text-slate-800 flex items-center gap-1.5">
+                            <i class="fa-solid ${icon}"></i>
+                            ${label}
+                            <span class="text-[9px] text-slate-400 font-mono">(${drv.feature})</span>
+                        </span>
+                        <span class="font-bold ${isRiskDriver ? 'text-rose-600' : 'text-emerald-600'}">
+                            ${impactText} (${drv.contribution > 0 ? '+' : ''}${drv.contribution.toFixed(3)})
+                        </span>
+                    </div>
+                    <div class="w-full bg-slate-200 rounded-full h-1 mt-1">
+                        <div class="${barColor} h-1 rounded-full" style="width: ${pct}%"></div>
+                    </div>
+                    <p class="text-[10px] text-slate-500 mt-1.5 leading-relaxed bg-white p-2 border border-slate-100 rounded">${explanation}</p>
+                `;
+                list.appendChild(drvRow);
+            });
+        }
+
+        // Pre-fill Suspicious Activity Report document template
+        function generateSARReport(predictResult, rawData) {
+            const isMule = predictResult.flagged;
+            const scorePct = (predictResult.probability * 100).toFixed(2);
+            
+            let doc = `======================================================================\n`;
+            doc += `SUSPICIOUS ACTIVITY REPORT (SAR) -- MULETRACE COMPLIANCE DOCUMENTATION\n`;
+            doc += `======================================================================\n\n`;
+            doc += `Date:          11-06-2026\n`;
+            doc += `Account ID:    ${predictResult.account_id}\n`;
+            doc += `Status:        ${isMule ? 'SUSPICIOUS / MONEY MULE FLAGGED' : 'NORMAL / NO COMPLIANCE ACTION'}\n`;
+            doc += `Evaluated:     ${scorePct}% Risk Probability\n`;
+            doc += `Engine Model:  ${predictResult.engine} (decision threshold: ${predictResult.threshold.toFixed(2)})\n\n`;
+            
+            doc += `COMPLIANCE ASSESSMENT STATEMENT:\n`;
+            if (isMule) {
+                doc += `The account profile represents high statistical deviation from normal savings behavior.\n`;
+                doc += `Local feature attribution engine identifies transaction attributes that conform to money-mule activity.\n`;
+            } else {
+                doc += `Account behavior is within legitimate ranges. No suspicious attributes flagged.\n`;
+            }
+            doc += `\nKEY RISK DRIVERS (LOCAL FEATURE ATTRIBUTION):\n`;
+            
+            predictResult.top_drivers.forEach((drv, i) => {
+                doc += `${i+1}. Feature [${drv.feature}] value [${
+                    drv.value !== null && typeof drv.value === 'number' ? drv.value.toFixed(4) : drv.value
+                }] contribs ${drv.contribution > 0 ? '+' : ''}${drv.contribution.toFixed(4)} (${drv.impact.toUpperCase()}).\n`;
+            });
+            
+            doc += `\nRECOMMENDED FRAUD MITIGATION WORKFLOW:\n`;
+            if (isMule) {
+                doc += `1. Block outgoing funds transfers immediately on Account ${predictResult.account_id}.\n`;
+                doc += `2. Lock downstream accounts linked by identical branch profile in entity network map.\n`;
+                doc += `3. Initiate manual background and identity check on registrant.\n`;
+            } else {
+                doc += `No mitigation required. Continue automated monitoring.\n`;
+            }
+            
+            doc += `\n========================= END OF SAR DOCUMENT ========================`;
+            document.getElementById("sar-textarea").value = doc;
+        }
+
+        // Copy SAR
+        function copySAR() {
+            const copyText = document.getElementById("sar-textarea");
+            copyText.select();
+            copyText.setSelectionRange(0, 99999);
+            navigator.clipboard.writeText(copyText.value);
+            alert("Compliance Report copied to clipboard!");
+        }
+
+        // Tab selection
+        function switchTab(tab) {
+            activeTab = tab;
+            const tabBtnXai = document.getElementById("tab-btn-xai");
+            const tabBtnSar = document.getElementById("tab-btn-sar");
+            const tabContXai = document.getElementById("tab-content-xai");
+            const tabContSar = document.getElementById("tab-content-sar");
+            
+            if (tab === "xai") {
+                tabBtnXai.className = "pb-2 font-bold text-blue-600 border-b-2 border-blue-600 px-1";
+                tabBtnSar.className = "pb-2 font-bold text-slate-500 hover:text-slate-800 px-1";
+                tabContXai.classList.remove("hidden");
+                tabContSar.classList.add("hidden");
+            } else {
+                tabBtnSar.className = "pb-2 font-bold text-blue-600 border-b-2 border-blue-600 px-1";
+                tabBtnXai.className = "pb-2 font-bold text-slate-500 hover:text-slate-800 px-1";
+                tabContSar.classList.remove("hidden");
+                tabContXai.classList.add("hidden");
+            }
+        }
+
+        // Parse CSV Text locally in JavaScript (no server side dependencies needed)
+        function parseCSVText(text) {
+            const lines = text.split(/\r?\n/);
+            if (lines.length === 0) return [];
+            
+            // Clean headers (remove quotes)
+            const headers = lines[0].split(',').map(h => h.trim().replace(/^"|"$/g, ''));
+            
+            const list = [];
+            for (let i = 1; i < lines.length; i++) {
+                const line = lines[i].trim();
+                if (!line) continue;
+                
+                const cols = line.split(',').map(c => c.trim().replace(/^"|"$/g, ''));
+                if (cols.length < headers.length) continue;
+                
+                const account = {};
+                for (let j = 0; j < headers.length; j++) {
+                    const header = headers[j];
+                    const val = cols[j];
+                    
+                    if (val === "" || val.toLowerCase() === "nan") {
+                        account[header] = null;
+                    } else if (!isNaN(val)) {
+                        account[header] = Number(val);
+                    } else {
+                        account[header] = val;
+                    }
+                }
+                
+                // Ensure Account ID is parsed or set dynamically
+                if (account['account_id']) {
+                    account.account_id = String(account['account_id']);
+                } else if (account['Unnamed: 0'] !== undefined) {
+                    account.account_id = 'ACC' + String(Math.floor(account['Unnamed: 0'])).padStart(5, '0');
+                } else {
+                    account.account_id = `UPL${10000 + i}`;
+                }
+                
+                // Target F3924 map to is_mule
+                if (account['F3924'] !== undefined) {
+                    account.is_mule = Number(account['F3924']);
+                } else {
+                    account.is_mule = 0;
+                }
+                
+                list.push(account);
+            }
+            return list;
+        }
+
+        // Upload and Evaluate CSV Dataset
+        async function handleCSVUpload(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            
+            const loader = document.getElementById("graph-loader");
+            if (loader) loader.classList.remove("hidden");
+            
+            const reader = new FileReader();
+            reader.onload = async function(e) {
+                const text = e.target.result;
+                const parsedAccounts = parseCSVText(text);
+                
+                if (parsedAccounts.length === 0) {
+                    alert("Error: Empty or invalid CSV file format.");
+                    if (loader) loader.classList.add("hidden");
+                    return;
+                }
+                
+                // Override our loaded list with parsed items
+                accounts = parsedAccounts;
+                
+                // Predict scores in batch
+                await batchPredictAllAccounts();
+                
+                renderAccountsList();
+                updateNetworkGraphFromData();
+                
+                if (accounts.length > 0) {
+                    selectAccount(accounts[0].account_id);
+                }
+                
+                if (loader) loader.classList.add("hidden");
+                alert(`Successfully loaded & evaluated ${accounts.length} records from CSV.`);
+            };
+            
+            reader.readAsText(file);
+        }
+
+        // Simulate incoming stream transaction
+        async function simulateTransaction() {
+            try {
+                const res = await fetch(`${API_URL}/simulate`);
+                const rawAccount = await res.json();
+                
+                const resPred = await fetch(`${API_URL}/predict`, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                        features: rawAccount,
+                        engine: activeEngine,
+                        threshold: activeThreshold
+                    })
+                });
+                const predResult = await resPred.json();
+                
+                rawAccount.predicted_prob = predResult.probability;
+                
+                // Push to top of table
+                accounts.unshift(rawAccount);
+                
+                renderAccountsList();
+                selectAccount(rawAccount.account_id);
+                
+                // Add to Network Map
+                updateNetworkGraphFromData();
+
+            } catch (err) {
+                console.error(err);
+            }
+        }
+
+        // Filter list
+        function filterAccounts(searchVal) {
+            const query = searchVal.trim().toLowerCase();
+            const container = document.getElementById("accounts-container");
+            
+            const rows = container.children;
+            for (let i = 0; i < rows.length; i++) {
+                const acc = accounts[i];
+                if (acc.account_id.toLowerCase().includes(query)) {
+                    rows[i].classList.remove("hidden");
+                } else {
+                    rows[i].classList.add("hidden");
+                }
+            }
+        }
+
+        // Initialize Force-Directed Graph Canvas
+        function initNetworkGraph() {
+            const container = document.getElementById("network-graph");
+            
+            // Build vis.js DataSet
+            nodes = new vis.DataSet([]);
+            edges = new vis.DataSet([]);
+            
+            const data = { nodes: nodes, edges: edges };
+            const options = {
+                physics: {
+                    stabilization: { enabled: true, iterations: 100 },
+                    barnesHut: {
+                        gravitationalConstant: -2000,
+                        centralGravity: 0.2,
+                        springLength: 95,
+                        springConstant: 0.04
+                    }
+                },
+                interaction: { hover: true, zoomView: true, dragView: true, tooltipDelay: 100 }
+            };
+            
+            network = new vis.Network(container, data, options);
+            
+            // Link node clicks to details inspector and neighborhood highlighting
+            network.on("click", function(params) {
+                if (params.nodes.length > 0) {
+                    const selectedId = params.nodes[0];
+                    selectAccount(selectedId);
+                    highlightNodeNeighborhood(selectedId);
+                } else {
+                    resetNeighborhoodHighlight();
+                }
+            });
+            
+            updateNetworkGraphFromData();
+        }
+
+        // Highlight selected node neighborhood and fade out the rest
+        function highlightNodeNeighborhood(selectedId) {
+            if (!network || !nodes || !edges) return;
+            
+            // Get all connected nodes and edges for the clicked node
+            const connectedEdges = network.getConnectedEdges(selectedId);
+            const connectedNodes = network.getConnectedNodes(selectedId);
+            
+            // Update node visual states to show focus
+            const allNodes = nodes.get();
+            const updatedNodes = allNodes.map(node => {
+                const isSelected = node.id === selectedId;
+                const isNeighbor = connectedNodes.includes(node.id);
+                
+                if (isSelected) {
+                    return {
+                        id: node.id,
+                        opacity: 1.0,
+                        font: { color: '#0f172a', size: 12, vadjust: -26 }
+                    };
+                } else if (isNeighbor) {
+                    return {
+                        id: node.id,
+                        opacity: 1.0,
+                        font: { color: '#334155', size: 9, vadjust: -22 }
+                    };
+                } else {
+                    return {
+                        id: node.id,
+                        opacity: 0.15,
+                        font: { color: 'rgba(148, 163, 184, 0.15)' }
+                    };
+                }
+            });
+            nodes.update(updatedNodes);
+            
+            // Highlight connections and fade out unrelated links
+            const allEdges = edges.get();
+            const updatedEdges = allEdges.map(edge => {
+                const isConnected = connectedEdges.includes(edge.id);
+                if (isConnected) {
+                    return {
+                        id: edge.id,
+                        color: { color: '#2563eb', highlight: '#2563eb', opacity: 1.0 },
+                        width: 3.0
+                    };
+                } else {
+                    return {
+                        id: edge.id,
+                        color: { color: 'rgba(148, 163, 184, 0.05)', opacity: 0.05 },
+                        width: 1.0
+                    };
+                }
+            });
+            edges.update(updatedEdges);
+        }
+
+        // Reset the network highlighting to normal state
+        function resetNeighborhoodHighlight() {
+            if (!nodes || !edges) return;
+            
+            const allNodes = nodes.get();
+            const updatedNodes = allNodes.map(node => {
+                return {
+                    id: node.id,
+                    opacity: 1.0,
+                    font: { color: '#334155', size: 9, vadjust: -22 }
+                };
+            });
+            nodes.update(updatedNodes);
+            
+            const allEdges = edges.get();
+            const updatedEdges = allEdges.map(edge => {
+                return {
+                    id: edge.id,
+                    color: {
+                        color: 'rgba(148, 163, 184, 0.2)',
+                        highlight: '#2563eb'
+                    },
+                    width: 1.5
+                };
+            });
+            edges.update(updatedEdges);
+        }
+
+        // Perform actual, data-driven entity resolution node linkage mapping
+        function updateNetworkGraphFromData() {
+            if (!nodes || !edges) return;
+            
+            const nodesArray = [];
+            const edgesArray = [];
+            
+            // 1. Add accounts as network nodes
+            accounts.forEach(acc => {
+                const prob = acc.predicted_prob || 0.0;
+                const flagged = prob >= activeThreshold;
+                const isSandbox = acc.account_id.startsWith("SBX-");
+                
+                // Fine-grained risk and simulation shape coding
+                let bgColor = '#10b981'; // Green (Safe)
+                let borderColor = '#059669';
+                let shapeType = "dot";
+                let nodeSize = 12;
+                
+                if (isSandbox) {
+                    shapeType = "diamond";
+                    bgColor = '#a855f7'; // Purple for Sandbox simulations
+                    borderColor = '#7e22ce';
+                    nodeSize = 16;
+                } else if (flagged) {
+                    bgColor = '#ef4444'; // Red (Flagged)
+                    borderColor = '#dc2626';
+                    nodeSize = 20;
+                } else if (prob >= 0.20) {
+                    bgColor = '#f59e0b'; // Orange (Medium risk Warning)
+                    borderColor = '#d97706';
+                    nodeSize = 15;
+                }
+                
+                // Interactive detailed hover tooltip
+                const tooltipHtml = document.createElement("div");
+                tooltipHtml.innerHTML = `
+                    <div style="font-family: 'Inter', sans-serif; padding: 10px; font-size: 11px; color: #1e293b; line-height: 1.5; background: #ffffff; border-radius: 8px;">
+                        <strong style="font-size: 12px; color: #0f172a;">Account Details</strong><hr style="margin: 6px 0; border: none; border-top: 1px solid #e2e8f0;"/>
+                        <strong>Account ID:</strong> ${acc.account_id}<br/>
+                        <strong>Type:</strong> ${acc.F3886 || 'Savings'}<br/>
+                        <strong>Occupation:</strong> ${acc.F3891 || 'student'}<br/>
+                        <strong>Branch Code:</strong> ${acc.F3887 !== null && acc.F3887 !== undefined ? acc.F3887 : 'N/A'}<br/>
+                        <strong>Risk Probability:</strong> ${(prob * 100).toFixed(2)}%<br/>
+                        <strong>Investigation State:</strong> ${isSandbox ? '🟣 Simulated Sandbox' : (flagged ? '🔴 Flagged Mule Alert' : (prob >= 0.20 ? '🟡 Warning' : '🟢 Safe Case'))}
+                    </div>
+                `;
+                
+                nodesArray.push({
+                    id: acc.account_id,
+                    label: acc.account_id,
+                    title: tooltipHtml,
+                    shape: shapeType,
+                    size: nodeSize,
+                    color: {
+                        background: bgColor,
+                        border: borderColor,
+                        highlight: {
+                            background: '#2563eb',
+                            border: '#1d4ed8'
+                        }
+                    },
+                    font: {
+                        color: '#334155',
+                        size: 9,
+                        face: 'Inter',
+                        vadjust: -22
+                    }
+                });
+            });
+            
+            // 2. Establish connections between nodes sharing Branch F3887 and Occupation F3891
+            for (let i = 0; i < accounts.length; i++) {
+                const accA = accounts[i];
+                for (let j = i + 1; j < accounts.length; j++) {
+                    const accB = accounts[j];
+                    
+                    // Match branch codes F3887 and occupations F3891 (both non-null)
+                    if (accA.F3887 !== null && accA.F3887 !== undefined && accA.F3887 === accB.F3887 &&
+                        accA.F3891 !== null && accA.F3891 !== undefined && accA.F3891 === accB.F3891) {
+                        
+                        edgesArray.push({
+                            from: accA.account_id,
+                            to: accB.account_id,
+                            color: {
+                                color: 'rgba(148, 163, 184, 0.25)',
+                                highlight: '#2563eb'
+                            },
+                            width: 1.5,
+                            label: "Shared Profile link",
+                            font: {
+                                size: 6,
+                                color: '#94a3b8',
+                                strokeWidth: 2,
+                                strokeColor: '#ffffff',
+                                vadjust: -8
+                            }
+                        });
+                    }
+                }
+            }
+            
+            nodes.clear();
+            edges.clear();
+            
+            nodes.add(nodesArray);
+            edges.add(edgesArray);
+            
+            // Fit viewport
+            network.fit({
+                animation: {
+                    duration: 800,
+                    easingFunction: "easeInOutQuad"
+                }
+            });
+        }
+
+        // Dynamic node state updates when threshold slider changes
+        function updateNetworkNodeStates() {
+            if (!nodes) return;
+            
+            accounts.forEach(acc => {
+                const prob = acc.predicted_prob || 0.0;
+                const flagged = prob >= activeThreshold;
+                const isSandbox = acc.account_id.startsWith("SBX-");
+                
+                let bgColor = '#10b981';
+                let borderColor = '#059669';
+                let nodeSize = 12;
+                
+                if (isSandbox) {
+                    bgColor = '#a855f7';
+                    borderColor = '#7e22ce';
+                    nodeSize = 16;
+                } else if (flagged) {
+                    bgColor = '#ef4444';
+                    borderColor = '#dc2626';
+                    nodeSize = 20;
+                } else if (prob >= 0.20) {
+                    bgColor = '#f59e0b';
+                    borderColor = '#d97706';
+                    nodeSize = 15;
+                }
+                
+                nodes.update({
+                    id: acc.account_id,
+                    size: nodeSize,
+                    color: {
+                        background: bgColor,
+                        border: borderColor
+                    }
+                });
+            });
+        }
+
+        // Switch left-hand panel tabs
+        function switchLeftTab(tab) {
+            const btnQueue = document.getElementById("left-tab-btn-queue");
+            const btnSandbox = document.getElementById("left-tab-btn-sandbox");
+            const queueCont = document.getElementById("left-tab-content-queue");
+            const sandboxCont = document.getElementById("left-tab-content-sandbox");
+            
+            if (tab === "queue") {
+                btnQueue.className = "pb-2 font-bold text-blue-600 border-b-2 border-blue-600 px-1";
+                btnSandbox.className = "pb-2 font-bold text-slate-500 hover:text-slate-800 px-1";
+                queueCont.classList.remove("hidden");
+                sandboxCont.classList.add("hidden");
+            } else {
+                btnSandbox.className = "pb-2 font-bold text-blue-600 border-b-2 border-blue-600 px-1";
+                btnQueue.className = "pb-2 font-bold text-slate-500 hover:text-slate-800 px-1";
+                sandboxCont.classList.remove("hidden");
+                queueCont.classList.add("hidden");
+            }
+        }
+
+        // Handle cohort template changes
+        function onCohortTemplateChange(value) {
+            let base = {};
+            if (value === "global_clean") {
+                base = { ...globalMedians };
+                // Set default display values for the core features
+                base.F3886 = "Savings";
+                base.F3891 = "student";
+                base.F3887 = 94;
+                base.F321 = 1.0;
+                base.F3811 = 50000;
+                base.F2582 = 0.0;
+                base.F3894 = 34.0;
+                base.F670 = 0.0;
+            } else if (globalCohortMedians[value]) {
+                base = { ...globalCohortMedians[value] };
+            } else {
+                base = { ...globalMedians };
+            }
+            
+            sandboxBaseProfile = base;
+            
+            // Populate form fields (8 Core)
+            document.getElementById("sb-account-type").value = base.F3886 || "Savings";
+            document.getElementById("sb-occupation").value = base.F3891 || "student";
+            document.getElementById("sb-branch").value = base.F3887 !== undefined ? base.F3887 : 94;
+            document.getElementById("sb-freq").value = base.F321 !== undefined ? Number(base.F321).toFixed(2) : 1.0;
+            document.getElementById("sb-balance").value = base.F3811 !== undefined ? Math.round(base.F3811) : 50000;
+            document.getElementById("sb-velocity").value = base.F2582 !== undefined ? Number(base.F2582).toFixed(2) : 0.0;
+            document.getElementById("sb-age").value = base.F3894 !== undefined ? Math.round(base.F3894) : 34;
+            document.getElementById("sb-fraud-link").value = base.F670 !== undefined ? Number(base.F670).toFixed(1) : "0.0";
+            
+            // Extended features (12 Extended)
+            document.getElementById("sb-f115").value = base.F115 !== undefined ? Number(base.F115).toFixed(2) : 0.5;
+            document.getElementById("sb-f3889").value = base.F3889 || "G365D";
+            document.getElementById("sb-f527").value = base.F527 !== undefined ? Number(base.F527).toFixed(2) : 1.0;
+            document.getElementById("sb-f531").value = base.F531 !== undefined ? Number(base.F531).toFixed(2) : 1.2;
+            document.getElementById("sb-f1692").value = base.F1692 !== undefined ? Math.round(base.F1692) : 0;
+            document.getElementById("sb-f2082").value = base.F2082 !== undefined ? Number(base.F2082).toFixed(2) : 0.0;
+            document.getElementById("sb-f2122").value = base.F2122 !== undefined ? Number(base.F2122).toFixed(2) : 0.0;
+            document.getElementById("sb-f2678").value = base.F2678 !== undefined ? Number(base.F2678).toFixed(2) : 0.0;
+            document.getElementById("sb-f2737").value = base.F2737 !== undefined ? Number(base.F2737).toFixed(2) : 0.0;
+            document.getElementById("sb-f2956").value = base.F2956 !== undefined ? Math.round(base.F2956) : 64;
+            document.getElementById("sb-f3043").value = base.F3043 !== undefined ? Math.round(base.F3043) : 87;
+            document.getElementById("sb-f3836").value = base.F3836 !== undefined ? Math.round(base.F3836) : 381286;
+        }
+
+        // Clone current queue inspection account details to Sandbox
+        function cloneSelectedToSandbox() {
+            if (!selectedAccount) {
+                alert("Please select an account from the queue first.");
+                return;
+            }
+            
+            sandboxBaseProfile = { ...selectedAccount };
+            
+            // Add custom option to selector dropdown if not present
+            const select = document.getElementById("sb-base-cohort");
+            let customOpt = select.querySelector('option[value="custom_cloned"]');
+            if (!customOpt) {
+                customOpt = document.createElement("option");
+                customOpt.value = "custom_cloned";
+                select.appendChild(customOpt);
+            }
+            customOpt.innerText = `Cloned Profile (${selectedAccount.account_id})`;
+            select.value = "custom_cloned";
+            
+            // Populate form fields (8 Core)
+            document.getElementById("sb-account-type").value = selectedAccount.F3886 || "Savings";
+            document.getElementById("sb-occupation").value = selectedAccount.F3891 || "student";
+            document.getElementById("sb-branch").value = selectedAccount.F3887 !== undefined ? selectedAccount.F3887 : 94;
+            document.getElementById("sb-freq").value = selectedAccount.F321 !== undefined ? Number(selectedAccount.F321).toFixed(2) : 1.0;
+            document.getElementById("sb-balance").value = selectedAccount.F3811 !== undefined ? Math.round(selectedAccount.F3811) : 50000;
+            document.getElementById("sb-velocity").value = selectedAccount.F2582 !== undefined ? Number(selectedAccount.F2582).toFixed(2) : 0.0;
+            document.getElementById("sb-age").value = selectedAccount.F3894 !== undefined ? Math.round(selectedAccount.F3894) : 34;
+            document.getElementById("sb-fraud-link").value = selectedAccount.F670 !== undefined ? Number(selectedAccount.F670).toFixed(1) : "0.0";
+            
+            // Extended features (12 Extended)
+            document.getElementById("sb-f115").value = selectedAccount.F115 !== undefined ? Number(selectedAccount.F115).toFixed(2) : 0.5;
+            document.getElementById("sb-f3889").value = selectedAccount.F3889 || "G365D";
+            document.getElementById("sb-f527").value = selectedAccount.F527 !== undefined ? Number(selectedAccount.F527).toFixed(2) : 1.0;
+            document.getElementById("sb-f531").value = selectedAccount.F531 !== undefined ? Number(selectedAccount.F531).toFixed(2) : 1.2;
+            document.getElementById("sb-f1692").value = selectedAccount.F1692 !== undefined ? Math.round(selectedAccount.F1692) : 0;
+            document.getElementById("sb-f2082").value = selectedAccount.F2082 !== undefined ? Number(selectedAccount.F2082).toFixed(2) : 0.0;
+            document.getElementById("sb-f2122").value = selectedAccount.F2122 !== undefined ? Number(selectedAccount.F2122).toFixed(2) : 0.0;
+            document.getElementById("sb-f2678").value = selectedAccount.F2678 !== undefined ? Number(selectedAccount.F2678).toFixed(2) : 0.0;
+            document.getElementById("sb-f2737").value = selectedAccount.F2737 !== undefined ? Number(selectedAccount.F2737).toFixed(2) : 0.0;
+            document.getElementById("sb-f2956").value = selectedAccount.F2956 !== undefined ? Math.round(selectedAccount.F2956) : 64;
+            document.getElementById("sb-f3043").value = selectedAccount.F3043 !== undefined ? Math.round(selectedAccount.F3043) : 87;
+            document.getElementById("sb-f3836").value = selectedAccount.F3836 !== undefined ? Math.round(selectedAccount.F3836) : 381286;
+            
+            switchLeftTab("sandbox");
+        }
+
+        // Run compliance sandbox profile evaluation
+        async function runSandboxAssessment() {
+            const accType = document.getElementById("sb-account-type").value;
+            const occupation = document.getElementById("sb-occupation").value;
+            const branch = Number(document.getElementById("sb-branch").value);
+            const freq = Number(document.getElementById("sb-freq").value);
+            const balance = Number(document.getElementById("sb-balance").value);
+            const velocity = Number(document.getElementById("sb-velocity").value);
+            const age = Number(document.getElementById("sb-age").value);
+            const fraudLink = Number(document.getElementById("sb-fraud-link").value);
+            
+            const limitRatio = Number(document.getElementById("sb-f115").value);
+            const activeWin = document.getElementById("sb-f3889").value;
+            const txActA = Number(document.getElementById("sb-f527").value);
+            const txActB = Number(document.getElementById("sb-f531").value);
+            const hrTransfers = Number(document.getElementById("sb-f1692").value);
+            const assocA = Number(document.getElementById("sb-f2082").value);
+            const assocB = Number(document.getElementById("sb-f2122").value);
+            const devVel = Number(document.getElementById("sb-f2678").value);
+            const locSpeed = Number(document.getElementById("sb-f2737").value);
+            const offHours = Number(document.getElementById("sb-f2956").value);
+            const alertFreq = Number(document.getElementById("sb-f3043").value);
+            const balanceNet = Number(document.getElementById("sb-f3836").value);
+            
+            const sbNum = Math.floor(Math.random() * 900) + 100;
+            const accountId = `SBX-${sbNum}`;
+            
+            // Build custom account profile mapping fields
+            const customAccount = {
+                account_id: accountId,
+                is_mule: 0,
+                F3886: accType,
+                F3891: occupation,
+                F3887: branch,
+                F321: freq,
+                F3811: balance,
+                F2582: velocity,
+                F3894: age,
+                F670: fraudLink,
+                F115: limitRatio,
+                F3889: activeWin,
+                F527: txActA,
+                F531: txActB,
+                F1692: hrTransfers,
+                F2082: assocA,
+                F2122: assocB,
+                F2678: devVel,
+                F2737: locSpeed,
+                F2956: offHours,
+                F3043: alertFreq,
+                F3836: balanceNet
+            };
+            
+            // Fill all other model features using sandboxBaseProfile values or global medians
+            globalHybridFeatures.forEach(col => {
+                if (customAccount[col] === undefined) {
+                    customAccount[col] = sandboxBaseProfile[col] !== undefined ? sandboxBaseProfile[col] : (globalMedians[col] !== undefined ? globalMedians[col] : 0.0);
+                }
+            });
+            
+            // Persist the base features on the sandbox account object
+            customAccount.base_features = { ...sandboxBaseProfile };
+            
+            try {
+                const res = await fetch(`${API_URL}/predict`, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                        features: customAccount,
+                        base_features: sandboxBaseProfile,
+                        engine: activeEngine,
+                        threshold: activeThreshold
+                    })
+                });
+                const data = await res.json();
+                
+                customAccount.predicted_prob = data.probability;
+                
+                // Add to list and select it
+                accounts.unshift(customAccount);
+                switchLeftTab("queue");
+                
+                renderAccountsList();
+                selectAccount(accountId);
+                updateNetworkGraphFromData();
+                
+                alert(`Assessment completed: Profile ${accountId} evaluated at ${(data.probability * 100).toFixed(2)}% risk. Added to Active alert queue.`);
+            } catch (err) {
+                console.error(err);
+                alert("Error calling prediction engine. Please check API status.");
+            }
+        }
+    </script>
+</div>
+</body>
+</html>

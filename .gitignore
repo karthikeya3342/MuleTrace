@@ -1,0 +1,17 @@
+# Python caching
+__pycache__/
+*.pyc
+
+# Dataset (too large for GitHub >100MB)
+DataSet.csv
+
+# Virtual environments
+venv/
+.venv/
+env/
+
+# App metadata/local IDE configuration
+.idea/
+.vscode/
+.gemini/
+.system_generated/
