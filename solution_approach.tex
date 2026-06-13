@@ -298,7 +298,7 @@ Scale Pos Weight & 110.8 & 110.8 \\
 \end{table}
 
 \subsection{Validation Methodology \& Robustness}
-To establish statistical credibility beyond simple holdout splits—which are prone to high variance due to the extremely small positive sample count (16 mules in the holdout split)—the models were evaluated using \textbf{Stratified 5-Fold Cross-Validation (SCV)}. Stratification ensures that each fold maintains the original $0.89\%$ target density (approximately 16 mules per fold), and the resulting standard deviations quantify the models' generalization stability.
+To establish statistical credibility beyond simple holdout splits—which are prone to high variance due to the extremely small positive sample count (16 mules in the holdout split)—the models were evaluated using \textbf{Stratified 5-Fold Cross-Validation (SCV)}. Stratification ensures that each fold maintains the original $0.89\%$ target density (approximately 16 mules per fold), and the resulting standard deviations quantify the models' generalization stability. Note that with approximately 3 positive examples per test fold, individual fold metrics carry high variance; the standard deviations reported reflect this constraint.
 
 Table 3 compares the performance on the live production holdout split against the expected performance under 5-Fold Cross-Validation.
 
@@ -382,7 +382,7 @@ To explain model decisions, we compute Local Feature Attribution (LFA) relative 
 \begin{equation}
 \text{Attribution}_i = (X_i - \mu_i) \times \text{Importance}_i
 \end{equation}
-While standard SHAP (SHapley Additive exPlanations) values provide game-theoretic guarantees (such as efficiency and symmetry), computing exact TreeSHAP values for ensemble models on a 170-dimensional space introduces an average latency of 50ms to 200ms per transaction. In retail banking, the transactional SLA requires sub-2ms latency for real-time transaction scoring. 
+where $\mu_i$ is the feature-wise median computed across the clean-class training population. While standard SHAP (SHapley Additive exPlanations) values provide game-theoretic guarantees (such as efficiency and symmetry), computing exact TreeSHAP values for ensemble models on a 170-dimensional space introduces an average latency of 50ms to 200ms per transaction. In retail banking, the transactional SLA requires sub-2ms latency for real-time transaction scoring. 
 
 Our Local Feature Attribution (LFA) acts as a linear-time $O(F)$ approximation of the local explanation space. It executes in under 0.05ms, satisfying the real-time SLA while still delivering clear directionality (mitigating factors vs. risk drivers) to compliance investigators. Furthermore, LFA scales linearly with feature size, making it suitable for low-latency, high-throughput financial infrastructure.
 
