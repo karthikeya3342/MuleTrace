@@ -83,6 +83,24 @@ def load_resources():
         with open(SAMPLE_ACCOUNTS_PATH, "r") as f:
             sample_accounts = json.load(f)
         print(f"Loaded {len(sample_accounts)} sample accounts.")
+        
+        # Inject deterministic device_fingerprint for 3D entity resolution
+        import hashlib
+        for acc in sample_accounts:
+            acc_id = str(acc.get("account_id", ""))
+            branch = acc.get("F3887")
+            occupation = acc.get("F3891")
+            branch_str = str(branch) if branch is not None else "UNKNOWN"
+            occ_str = str(occupation).lower().strip() if occupation is not None else "unknown"
+            
+            # Create a deterministic sub-cluster index (0, 1, or 2) using md5 of account_id
+            h = hashlib.md5(acc_id.encode("utf-8")).hexdigest()
+            cluster_idx = int(h, 16) % 3
+            
+            # Combine to form the device fingerprint hash
+            fp_raw = f"BR-{branch_str}_OCC-{occ_str}_CL-{cluster_idx}"
+            fp_hash = hashlib.md5(fp_raw.encode("utf-8")).hexdigest()[:8].upper()
+            acc["device_fingerprint"] = f"DEV-{fp_hash}"
     else:
         print("Warning: sample_accounts.json not found. Simulation features will be limited.")
 

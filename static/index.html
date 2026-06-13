@@ -322,6 +322,10 @@
                                     <option value="1.0">1 (Linked)</option>
                                 </select>
                             </div>
+                            <div class="flex flex-col gap-0.5 col-span-2">
+                                <label class="text-[9px] font-bold text-slate-500 uppercase">Device Fingerprint ID</label>
+                                <input type="text" id="sb-device-fingerprint" value="DEV-NEW" class="bg-white border border-slate-300 rounded p-1.5 text-xs text-slate-800 focus:outline-none focus:border-blue-600 focus:ring-1 focus:ring-blue-600 font-medium">
+                            </div>
                         </div>
 
                         <!-- 12 Extended Parameters -->
@@ -452,6 +456,10 @@
                     <div class="flex-grow flex flex-col gap-2 justify-end">
                         <h4 class="text-xs font-bold text-slate-700 uppercase tracking-wider border-b border-slate-200 pb-1">Core Identifiers</h4>
                         <div class="grid grid-cols-2 gap-x-3 gap-y-2 text-xs">
+                            <div class="flex flex-col col-span-2 bg-slate-50 p-1.5 rounded border border-slate-100 mb-1">
+                                <span class="text-[9px] text-slate-500 uppercase font-medium">Device Fingerprint</span>
+                                <span class="font-bold text-slate-800 mt-0.5" id="feat-device-fingerprint">-</span>
+                            </div>
                             <div class="flex flex-col">
                                 <span class="text-[9px] text-slate-500 uppercase font-medium">Account Type (F3886)</span>
                                 <span class="font-semibold text-slate-800 mt-0.5" id="feat-f3886">-</span>
@@ -806,6 +814,7 @@
             document.getElementById("inspect-id").innerText = account.account_id;
             
             // Fill identifiers
+            document.getElementById("feat-device-fingerprint").innerText = account.device_fingerprint || "N/A";
             document.getElementById("feat-f3886").innerText = account.F3886 || "N/A";
             document.getElementById("feat-f3891").innerText = account.F3891 || "N/A";
             document.getElementById("feat-f3887").innerText = account.F3887 !== null ? account.F3887 : "N/A";
@@ -1437,6 +1446,7 @@
                         <strong>Type:</strong> ${acc.F3886 || 'Savings'}<br/>
                         <strong>Occupation:</strong> ${acc.F3891 || 'student'}<br/>
                         <strong>Branch Code:</strong> ${acc.F3887 !== null && acc.F3887 !== undefined ? acc.F3887 : 'N/A'}<br/>
+                        <strong>Device ID:</strong> ${acc.device_fingerprint || 'N/A'}<br/>
                         <strong>Risk Probability:</strong> ${(prob * 100).toFixed(2)}%<br/>
                         <strong>Investigation State:</strong> ${isSandbox ? '🟣 Simulated Sandbox' : (flagged ? '🔴 Flagged Mule Alert' : (prob >= 0.20 ? '🟡 Warning' : '🟢 Safe Case'))}
                     </div>
@@ -1465,15 +1475,16 @@
                 });
             });
             
-            // 2. Establish connections between nodes sharing Branch F3887 and Occupation F3891
+            // 2. Establish connections between nodes sharing Branch F3887, Occupation F3891, AND Device Fingerprint
             for (let i = 0; i < accounts.length; i++) {
                 const accA = accounts[i];
                 for (let j = i + 1; j < accounts.length; j++) {
                     const accB = accounts[j];
                     
-                    // Match branch codes F3887 and occupations F3891 (both non-null)
+                    // Match branch codes F3887, occupations F3891, AND device_fingerprint (all non-null)
                     if (accA.F3887 !== null && accA.F3887 !== undefined && accA.F3887 === accB.F3887 &&
-                        accA.F3891 !== null && accA.F3891 !== undefined && accA.F3891 === accB.F3891) {
+                        accA.F3891 !== null && accA.F3891 !== undefined && accA.F3891 === accB.F3891 &&
+                        accA.device_fingerprint !== undefined && accA.device_fingerprint === accB.device_fingerprint) {
                         
                         edgesArray.push({
                             from: accA.account_id,
@@ -1483,7 +1494,7 @@
                                 highlight: '#2563eb'
                             },
                             width: 1.5,
-                            label: "Shared Profile link",
+                            label: "Shared Profile & Device ID",
                             font: {
                                 size: 6,
                                 color: '#94a3b8',
@@ -1601,6 +1612,11 @@
             document.getElementById("sb-age").value = base.F3894 !== undefined ? Math.round(base.F3894) : 34;
             document.getElementById("sb-fraud-link").value = base.F670 !== undefined ? Number(base.F670).toFixed(1) : "0.0";
             
+            // Set default or existing device fingerprint
+            const branchVal = base.F3887 !== undefined ? base.F3887 : 94;
+            const occVal = base.F3891 || "student";
+            document.getElementById("sb-device-fingerprint").value = base.device_fingerprint || `DEV-${branchVal}-${occVal.substring(0,3).toUpperCase()}-99`;
+            
             // Extended features (12 Extended)
             document.getElementById("sb-f115").value = base.F115 !== undefined ? Number(base.F115).toFixed(2) : 0.5;
             document.getElementById("sb-f3889").value = base.F3889 || "G365D";
@@ -1645,6 +1661,7 @@
             document.getElementById("sb-velocity").value = selectedAccount.F2582 !== undefined ? Number(selectedAccount.F2582).toFixed(2) : 0.0;
             document.getElementById("sb-age").value = selectedAccount.F3894 !== undefined ? Math.round(selectedAccount.F3894) : 34;
             document.getElementById("sb-fraud-link").value = selectedAccount.F670 !== undefined ? Number(selectedAccount.F670).toFixed(1) : "0.0";
+            document.getElementById("sb-device-fingerprint").value = selectedAccount.device_fingerprint || "DEV-NEW";
             
             // Extended features (12 Extended)
             document.getElementById("sb-f115").value = selectedAccount.F115 !== undefined ? Number(selectedAccount.F115).toFixed(2) : 0.5;
@@ -1686,6 +1703,7 @@
             const offHours = Number(document.getElementById("sb-f2956").value);
             const alertFreq = Number(document.getElementById("sb-f3043").value);
             const balanceNet = Number(document.getElementById("sb-f3836").value);
+            const deviceFingerprint = document.getElementById("sb-device-fingerprint").value;
             
             const sbNum = Math.floor(Math.random() * 900) + 100;
             const accountId = `SBX-${sbNum}`;
@@ -1713,7 +1731,8 @@
                 F2737: locSpeed,
                 F2956: offHours,
                 F3043: alertFreq,
-                F3836: balanceNet
+                F3836: balanceNet,
+                device_fingerprint: deviceFingerprint
             };
             
             // Fill all other model features using sandboxBaseProfile values or global medians
