@@ -3,23 +3,38 @@
 \usepackage[utf8]{inputenc}
 \usepackage{amsmath}
 \usepackage{amssymb}
-\usepackage{booktabs}
 \usepackage{graphicx}
 \usepackage{hyperref}
 \usepackage{listings}
 \usepackage{xcolor}
 \usepackage{geometry}
-\geometry{a4paper, margin=1.0in}
+\geometry{a4paper, margin=0.75in, headheight=15pt} % Set margins to 0.75in for maximum table printable area
 \usepackage{tocloft}
 \usepackage{array}
 \usepackage{enumitem}
-\usepackage{longtable}
+\usepackage{tabularx} % Required for dynamic table column wrapping
+\usepackage{colortbl} % For colored table headers and shading
+\usepackage{fancyhdr} % Custom headers and footers
+\usepackage{titlesec} % Beautiful section headings
+\usepackage{mathpazo} % Premium Palatino font styling
 
-% Custom Color Palette for Executive Look
+% Global Table Vertical Spacing (Array Stretch) - Adds beautiful breathing room
+\renewcommand{\arraystretch}{1.4}
+
+% Custom Color Palette
 \definecolor{navy}{rgb}{0.11,0.22,0.54}
 \definecolor{darkgray}{rgb}{0.2,0.2,0.2}
 \definecolor{lightgray}{rgb}{0.96,0.96,0.98}
 \definecolor{codeblue}{rgb}{0.13,0.38,0.76}
+\definecolor{tablerowgray}{rgb}{0.94,0.95,0.98}
+
+% Section formatting with Navy title and custom horizontal divider line
+\titleformat{\section}
+  {\color{navy}\normalfont\Large\bfseries}
+  {\thesection}{1em}{}[\titleline{\color{navy}\titlerule[1.5pt]}]
+\titleformat{\subsection}
+  {\color{navy}\normalfont\large\bfseries}
+  {\thesubsection}{1em}{}
 
 % Listings Style for JSON schemas and curl commands
 \lstdefinestyle{jsonstyle}{
@@ -30,9 +45,22 @@
     stringstyle=\color{codeblue},
     showspaces=false,                
     showstringspaces=false,
-    tabsize=2
+    tabsize=2,
+    frame=single,
+    rulecolor=\color{lightgray},
+    framexleftmargin=4pt,
+    framexrightmargin=4pt
 }
 \lstset{style=jsonstyle}
+
+% Setup Headers & Footers
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[L]{\color{gray}\small MuleTrace (MTX) Solution Approach}
+\fancyhead[R]{\color{gray}\small Section \thesection}
+\fancyfoot[C]{\color{gray}\small Page \thepage}
+\renewcommand{\headrulewidth}{0.5pt}
+\renewcommand{\footrulewidth}{0.0pt}
 
 \begin{document}
 
@@ -41,26 +69,31 @@
 % ==========================================
 \begin{titlepage}
     \centering
-    \vspace*{2.0cm}
+    \vspace*{3.0cm}
     
-    {\Huge \bfseries MuleTrace (MTX) \par}
-    \vspace{0.6cm}
-    {\Large \bfseries Technical Whitepaper \& Solution Approach Document \\ \large Real-Time AML Money-Mule Classification, Entity Resolution, and Sandbox Audit Engine \par}
-    \vspace{1.5cm}
+    % Thick Navy vertical line accent
+    \noindent
+    \makebox[0pt][r]{\color{navy}\vrule width 4pt\hspace{15pt}}%
+    \begin{minipage}{\textwidth}
+        {\Huge \bfseries \color{navy} MuleTrace (MTX) \par}
+        \vspace{0.4cm}
+        {\Large \bfseries \color{darkgray} Technical Solution Approach \& System Design \par}
+        \vspace{0.2cm}
+        {\large \textit{Real-Time AML Money-Mule Detection Decision Engine} \par}
+    \end{minipage}
     
-    \begin{minipage}{0.85\textwidth}
-        \centering
+    \vspace{4.0cm}
+    
+    % Light vertical line accent for links
+    \noindent
+    \makebox[0pt][r]{\color{lightgray}\vrule width 4pt\hspace{15pt}}%
+    \begin{minipage}{\textwidth}
         \textbf{Deployed Production URL:}\\
         \href{https://muletrace-ysh4.onrender.com/}{https://muletrace-ysh4.onrender.com/}\\
-        \vspace{0.4cm}
+        \vspace{0.6cm}
         \textbf{GitHub Repository:}\\
         \href{https://github.com/karthikeya3342/MuleTrace}{https://github.com/karthikeya3342/MuleTrace}
     \end{minipage}
-    
-    \vfill
-    {\large Prepared for evaluation by the Technical Review Committee \par}
-    \vspace{0.3cm}
-    {\large \today \par}
 \end{titlepage}
 
 % ==========================================
@@ -72,20 +105,12 @@
 \pagenumbering{arabic}
 
 % ==========================================
-% SECTION 1: INTRODUCTION
+% SECTION 1: EXECUTIVE SUMMARY
 % ==========================================
-\section{Introduction \& AML Problem Taxonomy}
-Financial institutions worldwide operate under strict regulatory mandates to combat money laundering, terror financing, and fraud. Among these, the detection of ``money mules''---individuals who lease or recruit their bank accounts to intermediary syndicates for laundering illicit funds---poses a significant detection challenge. Fraud rings target vulnerable populations, such as students, housewives, and retirees, using their accounts to receive and transfer funds via immediate peer-to-peer (P2P) transfers, digital wallets, or international wire transfers. This layering technique breaks traditional rule-based audit trails, making it difficult for compliance officers to trace transactions.
+\section{Executive Summary}
+Money laundering via retail bank accounts (money mules) breaks transactional audit trails, rendering traditional rule-based banking systems ineffective. While complex machine learning (ML) classifiers can detect these anomalies, regulatory safety guidelines (such as the Federal Reserve Board's SR 11-7 model governance rules) require full interpretability before placing holds on customer accounts.
 
-Traditional Anti-Money Laundering (AML) models rely heavily on static, Rule-Based Systems (RBS). These systems evaluate transactions based on hard-coded threshold alerts, which frequently trigger massive volumes of false-positive alarms. The result is investigator fatigue and backlogs. Conversely, high-capacity machine learning models (such as deep neural networks and ensemble gradient boosted trees) capture complex, non-linear transactional anomalies but function as ``black boxes.'' Under regulatory guidelines like the US Federal Reserve Board's SR 11-7 Model Risk Management framework, banks must supply clear, explainable, and reproducible audit logs for placing automatic holds or blocks on retail accounts. 
-
-To bridge this gap, \textbf{MuleTrace (MTX)} is designed as a unified, real-time explainable machine learning decision engine. It integrates:
-\begin{enumerate}
-    \item A \textbf{Bimodal Machine Learning Pipeline} running optimized XGBoost and LightGBM models in parallel to balance precision and recall.
-    \item A \textbf{Perturbation-Based Scorecard Engine} allowing investigators to run policy simulations (such as adjusting transaction limits or verifying occupations) on a cloned sandbox state without altering production baselines.
-    \item An \textbf{Explainable AI (XAI) \& Natural Language Generation (NLG) Engine} that translates mathematical feature attributions into forensic narratives and pre-fills Suspicious Activity Report (SAR) templates.
-    \item An \textbf{Entity Resolution Engine} that links accounts sharing operational branch codes and occupation profiles to visualize money laundering syndicates.
-\end{enumerate}
+The \textbf{MuleTrace (MTX)} platform resolves this conflict. It is a real-time, explainable AML decision engine combining a dual-engine (XGBoost and LightGBM) bimodal classifier, an interactive policy scorecard sandbox for audit overrides, and a Local Feature Attribution (LFA) natural language explanation compiler that automatically populates Suspicious Activity Report (SAR) templates.
 
 ---
 
@@ -93,155 +118,143 @@ To bridge this gap, \textbf{MuleTrace (MTX)} is designed as a unified, real-time
 % SECTION 2: SYSTEM ARCHITECTURE
 % ==========================================
 \section{System Architecture Overview}
-The MuleTrace system is designed to meet low-latency transactional SLAs (sub-2ms ingestion and inference). The end-to-end data flow and processing path are illustrated in Figure 1:
+MuleTrace achieves sub-2ms transaction latency using a service-oriented pipeline. The end-to-end processing path operates in five stages:
 
-\begin{figure}[ht]
+\begin{figure}[htbp]
 \centering
-\begin{tabular}{|c|}
-\hline
+\small
+\setlength{\fboxsep}{10pt}
+\framebox[\textwidth]{
+\begin{minipage}{0.95\textwidth}
+\centering
+\vspace{0.1cm}
 \textbf{1. Transaction Ingestion Layer} \\
-Reads streaming account transactional variables and queries historical medians \\
-\hline
+Ingests streaming parameters, decodes categories, and imputes missing fields with cohort medians. \\
+\vspace{0.2cm}
 $\Downarrow$ \\
-\hline
+\vspace{0.2cm}
 \textbf{2. Bimodal Machine Learning Pipeline} \\
-XGBoost (Precision-tuned model) \& LightGBM (Recall-tuned model) run in parallel \\
-\hline
+Runs XGBoost (Precision-Focus) \& LightGBM (Recall-Focus) classifiers in parallel. \\
+\vspace{0.2cm}
 $\Downarrow$ \\
-\hline
+\vspace{0.2cm}
 \textbf{3. Perturbation-Based Scorecard Engine} \\
-Applies Sandbox overrides ($\Delta_k$) and mitigation offsets on cloned profiles \\
-\hline
+Applies Sandbox overrides ($\Delta_k$) and mitigation offsets on cloned profiles. \\
+\vspace{0.2cm}
 $\Downarrow$ \\
-\hline
-\textbf{4. XAI \& NLG Explanation Engine} \\
-Translates local feature attributions ($\text{Attribution}_i$) to compliance sentences \\
-\hline
+\vspace{0.2cm}
+\textbf{4. XAI \& Natural Language Compiler} \\
+Calculates local feature attributions and compiles natural-language compliance narratives. \\
+\vspace{0.2cm}
 $\Downarrow$ \\
-\hline
-\textbf{5. Web Dashboard \& Entity Linkage Graph} \\
-Renders vis.js network, Focus Mode neighborhood isolation, and compiles SARs \\
-\hline
-\end{tabular}
-\caption{MTX Real-Time Processing Architecture}
+\vspace{0.2cm}
+\textbf{5. Web Dashboard \& vis.js Linkage Map} \\
+Renders responsive charts, Focus Mode network graphs, and auto-populated SARs.
+\vspace{0.1cm}
+\end{minipage}
+}
+\caption{MuleTrace (MTX) End-to-End Processing Pipeline Flow}
 \label{fig:pipeline}
 \end{figure}
 
-The five components operate in sequence:
+---
+
+% ==========================================
+% SECTION 3: FEATURE MAPPINGS
+% ==========================================
+\section{Feature Engineering \& Column Mapping}
+To protect customer privacy, the raw training dataset's 3,921 features are anonymized using sequential index codes ($F1$ to $F3921$). We compressed this high-dimensional dataset into a \textbf{170-dimensional hybrid feature set} by extracting the top 150 features ranked by gain-based feature importance from an initial model training run and merging them with the 18 bank-recommended parameters. This compression reduced model footprint and latency by over $95\%$, preserving $99\%$ of the original classification accuracy.
+
+Table 1 details the 20 sandbox features (8 core and 12 extended) mapped to their functional banking indicators and override weights.
+
+\begin{table}[htbp]
+\caption{MTX Sandbox Feature Mapping Specifications}
+\label{table:mappings}
+\centering
+\footnotesize % Typeset in footnotesize for clean spacing
+\begin{tabularx}{\textwidth}{ll >{\hsize=1.45\hsize\raggedright\arraybackslash}X >{\hsize=0.55\hsize\centering\arraybackslash}X }
+\hline
+\rowcolor{navy} \textcolor{white}{\textbf{Anonymized ID}} & \textcolor{white}{\textbf{Semantic Label}} & \textcolor{white}{\textbf{Compliance Significance \& Description}} & \textcolor{white}{\textbf{Override Weight}} \\
+\hline
+F3886 & Account Type & Type of account (Savings, Current, Gold, etc.). Used as a prerequisite in frequency rules. & N/A \\
+\hline
+\rowcolor{tablerowgray}
+F3891 & Registered Occupation & Self-reported job status (student, housewife, retired). Mitigates risk when salaried; amplifies risk when combined with large balances. & -25\% (Salaried) \\
+\hline
+F3887 & Bank Branch Code & Unique identifier of the account registration branch. Escalates risk for specific fraud hotbeds. & +5\% (Branch 94, 98, 150) \\
+\hline
+\rowcolor{tablerowgray}
+F321 & Tx Freq / Day & Identifies sudden spikes in daily transaction counts. & -20\% ($<3.0$) / +15\% ($>5.0$) / +25\% ($>10.0$) \\
+\hline
+F3811 & Avg Balance & 30-day moving average of account holdings. Escalates for high balance-to-occupation ratios. & -30\% ($<\$100\text{k}$) / +15\% to +50\% (Escalation) \\
+\hline
+\rowcolor{tablerowgray}
+F2582 & Velocity Score & Deviation of daily debit volumes over 7 days. & -20\% ($<1.0$) / +10\% ($>1.5$) / +20\% ($>3.0$) \\
+\hline
+F3894 & Customer Age & Demographic tracker; flags youth recruitment rings. & +10\% ($<23$ yrs) \\
+\hline
+\rowcolor{tablerowgray}
+F670 & Fraud Link Flag & Direct connection (IP, device) to a known money mule. & -25\% (Cleared) / +35\% (Flagged) \\
+\hline
+\rowcolor{navy} \multicolumn{4}{c}{\textcolor{white}{\textbf{Extended Sandbox Features}}} \\
+\hline
+F115 & Daily Limit Ratio & Utilized percentage of transaction limits. & -10\% ($<0.2$) \\
+\hline
+\rowcolor{tablerowgray}
+F527 & Tx Activity A & Total inbound peer-to-peer transfers. Baseline control. & N/A \\
+\hline
+F531 & Tx Activity B & Total outbound digital withdrawals. Baseline control. & N/A \\
+\hline
+\rowcolor{tablerowgray}
+F1692 & Hi-Risk Transfer Count & Transaction counts to blacklisted branches. & -15\% ($<1$) / +15\% ($>2$) / +25\% ($>5$) \\
+\hline
+F2082 & Net Assoc Score A & Association scoring based on remote logins. & +15\% ($>0.8$) \\
+\hline
+\rowcolor{tablerowgray}
+F2122 & Net Assoc Score B & External KYC database matching risk index. & +15\% ($>0.8$) \\
+\hline
+F2678 & Device Vel Index & Monitors device switches in short windows. & +25\% ($>100\text{k}$) \\
+\hline
+\rowcolor{tablerowgray}
+F2737 & Loc Change Speed & Physical velocity anomalies between login cities. & -15\% ($<5.0$) / +15\% ($>50.0$) \\
+\hline
+F2956 & Off-Hrs Logins & Logins occurring between 00:00 and 04:00. & +15\% ($>500$) \\
+\hline
+\rowcolor{tablerowgray}
+F3043 & Alert Freq Index & Historical alerts generated on this account. & -15\% ($<50.0$) / +15\% ($>500$) \\
+\hline
+F3836 & Net Balance Ind. & Balance deviation against median register values. & -30\% ($<\$100\text{k}$) / +15\% to +50\% (Escalation) \\
+\hline
+\rowcolor{tablerowgray}
+F3889 & Active Window & Active window of transactions (e.g. 24h, 30d). Baseline control. & N/A \\
+\hline
+\end{tabularx}
+\end{table}
+
+---
+
+% ==========================================
+% SECTION 4: DATA LEAKAGE RESOLUTION
+% ==========================================
+\section{Data Leakage \& Preprocessing Resolutions}
+During baseline data audits, we identified and mitigated two critical data leakages:
 \begin{itemize}
-    \item \textbf{Transaction Ingestion Layer:} Ingests streaming transactional data, extracts key indicators, and fetches cached historical medians to compile a complete customer profile.
-    \item \textbf{Bimodal Machine Learning Pipeline:} Runs parallel inference on the compiled profile. The compliance officer can toggle between XGBoost (precision focus for lower alert volumes) and LightGBM (recall focus during active fraud waves).
-    \item \textbf{Perturbation-Based Scorecard Engine:} Checks if the incoming record is in a sandbox state (indicated by an \texttt{account\_id} prefix of \texttt{SBX-}). If changes are detected, it evaluates them against baseline records and applies manual overrides.
-    \item \textbf{XAI \& NLG Explanation Engine:} Computes Local Feature Attribution (LFA) vectors and translates them into natural language compliance explanations.
-    \item \textbf{Web Dashboard:} Displays risk profiles, auto-populates regulatory SAR templates, and renders the vis.js entity-resolved network graph.
+    \item \textbf{Index/Sorting Leakage:} The raw training CSV was pre-sorted by the target variable $Y$ (mule/clean status). Standard decision trees split on row index as a proxy feature, yielding an artificial validation accuracy of $99.9\%$. We dropped row indexes and randomly shuffled the records before training.
+    \item \textbf{Temporal Batch Leakage:} Features $F2230$ and $F3912$ acted as exact temporal separators (clean and mule cases were clustered in different months). We excluded both features entirely to force the classifiers to learn structural banking patterns rather than temporal drift.
 \end{itemize}
 
 ---
 
 % ==========================================
-% SECTION 3: DATASET CHARACTERIZATION
+% SECTION 5: MODEL PIPELINE & RESULTS
 % ==========================================
-\section{Dataset Characterization \& Columns Naming Strategy}
+\section{Machine Learning Model Pipeline \& Results}
 
-\subsection{Raw Data Profile and Imbalance}
-The baseline training dataset contains high-dimensional transaction records representing behavioral histories:
-\begin{itemize}
-    \item \textbf{Dimensions:} 3,921 raw feature columns.
-    \item \textbf{Target Class Density:} Extremely skewed; money-mule cases constitute only \textbf{0.89\%} of all observations. This requires customized weighting parameters during training to prevent models from overfitting to the majority clean class.
-\end{itemize}
+\subsection{Bimodal Design and Hyperparameters}
+MTX rejects a single-model approach in favor of a bimodal pipeline to navigate the trade-offs of financial compliance. Anti-money laundering (AML) operations present asymmetric costs: false positives (freezing clean accounts) cause customer friction and regulatory issues, while false negatives (missed money mules) lead to severe compliance penalties and money laundering. We deploy two models optimized for different operational contexts.
 
-\subsection{Column Anonymization and Renaming Strategy}
-To protect customer privacy and prevent the exposure of proprietary transaction routing variables, the raw dataset columns are anonymized using sequential index codes (e.g., $F1, F2, \dots, F3921$). 
+A natural question arises: \textit{if both models are trained with the identical minority class weight penalization (\texttt{scale\_pos\_weight = 110.8}) to handle class imbalance ($0.89\%$), what differentiates their precision-recall trade-offs?} The bimodal differentiation is driven by two distinct mechanisms:
 
-To construct an explainable compliance engine, we performed a statistical correlation audit to isolate the \textbf{18 bank-recommended features} suggested by fraud team experts. We mapped these anonymized features to their functional banking indicators (detailed in Table 1). The rest of the 3,921 baseline columns retain their anonymized IDs to prevent model validation divergence.
-
-\subsection{Hybrid Feature Selection}
-To achieve sub-2ms transaction latency, we compressed the 3,921-dimensional input space into a \textbf{170-dimensional hybrid feature set} by executing the following pipeline:
-\begin{enumerate}
-    \item We trained a baseline XGBoost classifier on all 3,921 raw columns.
-    \item We computed the gain-based feature importances and extracted the top 150 features.
-    \item We merged these top 150 features with the 18 bank-recommended features (handling overlaps). This process yields 170 unique features, preserving $99\%$ of the model's original predictive capacity while reducing model size and computational latency by over $95\%$.
-\end{enumerate}
-
-\begin{longtable}{llp{7.5cm}c}
-\caption{MTX Sandbox Feature Mapping Specifications} \label{table:mappings} \\
-\toprule
-\textbf{Anonymized ID} & \textbf{Semantic Label} & \textbf{Compliance Significance \& Description} & \textbf{Override Weight} \\
-\midrule
-\endfirsthead
-\multicolumn{4}{c}%
-{{\bfseries Table \thetable\ \path{--} Continued from previous page}} \\
-\toprule
-\textbf{Anonymized ID} & \textbf{Semantic Label} & \textbf{Compliance Significance \& Description} & \textbf{Override Weight} \\
-\midrule
-\endhead
-\bottomrule
-\multicolumn{4}{r}{{Continued on next page}} \\
-\endfoot
-\bottomrule
-\endlastfoot
-F3886 & Account Type & Type of account (Savings, Current, Gold, etc.). & $+0.2\%$ \\
-F3891 & Registered Occupation & Self-reported job status (student, housewife, retired). & $-25.0\%$ \\
-F3887 & Bank Branch Code & Unique identifier of the account registration branch. & $+5.0\%$ \\
-F321 & Tx Freq / Day & Identifies sudden spikes in transaction counts. & $+15\% / +25\%$ \\
-F3811 & Avg Balance & 30-day moving average of account holdings. & $-30\% / -1.3\%$ \\
-F2582 & Velocity Score & Deviation of daily debit volumes over 7 days. & $+10\% / +20\%$ \\
-F3894 & Customer Age & Demographic tracker; flags youth recruitment rings. & $+10.0\%$ \\
-F670 & Fraud Link Flag & Direct connection (IP, device) to a known mule. & $+35.0\%$ \\
-\midrule
-\multicolumn{4}{c}{\textbf{Extended Sandbox Features}} \\
-\midrule
-F115 & Daily Limit Ratio & Utilized percentage of transaction limits. & $-10.0\%$ \\
-F527 & Tx Activity A & Total inbound peer-to-peer transfers. & N/A \\
-F531 & Tx Activity B & Total outbound digital withdrawals. & N/A \\
-F1692 & Hi-Risk Transfer Count & Transaction counts to blacklisted branches. & $+15\% / +25\%$ \\
-F2082 & Net Assoc Score A & Association scoring based on remote logins. & $+15.0\%$ \\
-F2122 & Net Assoc Score B & External KYC database matching risk index. & $+15.0\%$ \\
-F2678 & Device Vel Index & Monitors device switches in short windows. & $+25.0\%$ \\
-F2737 & Loc Change Speed & Physical velocity anomalies between login cities. & $+15.0\%$ \\
-F2956 & Off-Hrs Logins & Logins occurring between 00:00 and 04:00. & $+15.0\%$ \\
-F3043 & Alert Freq Index & Historical alerts generated on this account. & $+15.0\%$ \\
-F3836 & Net Balance Ind. & Balance deviation against median register values. & $+15\% / +30\% / +50\%$ \\
-F3889 & Active Window & Active window of transactions (e.g. 24h, 30d). & N/A \\
-\end{longtable}
-
----
-
-% ==========================================
-% SECTION 4: PREPROCESSING & DATA LEAKAGES
-% ==========================================
-\section{Preprocessing \& Data Leakage Resolution}
-During initial model audits, we identified two severe data leakages that, if left untreated, would cause models to overfit and fail in production.
-
-\subsection{Index/Sorting Leakage}
-The raw training CSV dataset rows were sorted by the target classification variable $Y \in \{0, 1\}$. An un-shuffled gradient boosted tree classifier would split on the row index or record number, yielding an artificial validation accuracy of $99.9\%$ that drops to $50\%$ in production.
-\\\textbf{Mitigation:} We dropped the index, shuffled the dataset using a random seed, and reset the index pointers before model training:
-\begin{verbatim}
-df = df.sample(frac=1, random_state=42).reset_index(drop=True)
-\end{verbatim}
-
-\subsection{Temporal Batch Leakage}
-Features $F2230$ and $F3912$ acted as exact temporal separators (clean cases were clustered in specific months, while mule cases were clustered in others). The model learned to classify based on date batches rather than transactional behaviors.
-\\\textbf{Mitigation:} We excluded $F2230$ and $F3912$ entirely from the training pipeline.
-
-\subsection{Categorical Encoding and Missing Value Imputation}
-Missing values are handled dynamically by the preprocessing pipeline:
-\begin{itemize}
-    \item \textbf{Categorical columns} are imputed with the category string \texttt{"Missing"} and transformed using label encoding.
-    \item \textbf{Numeric columns} are imputed with their global median values computed from the training set, which prevents model crash during validation.
-\end{itemize}
-
----
-
-% ==========================================
-% SECTION 5: MODEL PIPELINE
-% ==========================================
-\section{Machine Learning Model Pipeline}
-Rather than using a single model, we deploy a \textbf{Dual-Engine Bimodal Architecture} to navigate the trade-offs of financial compliance. Anti-money laundering (AML) operations present asymmetric costs: false positives (freezing clean accounts) cause customer friction and regulatory issues, while false negatives (missed money mules) lead to severe compliance penalties. 
-
-To address the severe class imbalance ($0.89\%$), both engines are trained with minority class weight penalization (\texttt{scale\_pos\_weight = 110.8}), representing the inverse class ratio. 
-
-A natural question arises: \textit{if both models are trained with identical class weight penalization, what actually differentiates them?} The bimodal differentiation is driven by two distinct mechanisms:
 \begin{enumerate}
     \item \textbf{Tree Growth Algorithms and Regularization (Structural Asymmetry):}
     \begin{itemize}
@@ -257,76 +270,143 @@ A natural question arises: \textit{if both models are trained with identical cla
 
 Table 2 details the hyperparameter configurations of the live production models.
 
-\begin{table}[ht]
+\begin{table}[htbp]
 \caption{Model Hyperparameter Configurations}
 \label{table:hyperparams}
 \centering
-\begin{tabular}{lcc}
-\toprule
-\textbf{Hyperparameter} & \textbf{XGBoost Engine} & \textbf{LightGBM Engine} \\
-\midrule
-Learning Rate ($\eta$) & 0.05 & 0.05 \\
+\small
+\begin{tabularx}{\textwidth}{Xcc}
+\hline
+\rowcolor{navy} \textcolor{white}{\textbf{Hyperparameter}} & \textcolor{white}{\textbf{XGBoost Engine}} & \textcolor{white}{\textbf{LightGBM Engine}} \\
+\hline
+Learning Rate & 0.10 & 0.03 \\
+\hline
+\rowcolor{tablerowgray}
 Max Tree Depth & 5 & 4 \\
-Number of Estimators & 100 & 80 \\
-Minimum Child Weight / Samples & 1.0 & 8 \\
+\hline
+Number of Estimators & 100 & 200 \\
+\hline
+\rowcolor{tablerowgray}
+Number of Leaves & N/A (Max leaves = 32) & 15 \\
+\hline
+Minimum Child Samples & 1.0 (min\_child\_weight) & 8 \\
+\hline
+\rowcolor{tablerowgray}
 Scale Pos Weight & 110.8 & 110.8 \\
-\bottomrule
-\end{tabular}
+\hline
+\end{tabularx}
 \end{table}
 
-\begin{table}[ht]
+\subsection{Validation Methodology \& Robustness}
+To establish statistical credibility beyond simple holdout splits—which are prone to high variance due to the extremely small positive sample count (16 mules in the holdout split)—the models were evaluated using \textbf{Stratified 5-Fold Cross-Validation (SCV)}. Stratification ensures that each fold maintains the original $0.89\%$ target density (approximately 16 mules per fold), and the resulting standard deviations quantify the models' generalization stability.
+
+Table 3 compares the performance on the live production holdout split against the expected performance under 5-Fold Cross-Validation.
+
+\begin{table}[htbp]
 \caption{Model Performance Evaluation Summary}
 \label{table:eval}
 \centering
-\begin{tabular}{lcccccc}
-\toprule
-\textbf{Model Engine} & \textbf{Accuracy} & \textbf{Precision} & \textbf{Recall} & \textbf{F1-Score} & \textbf{PR AUC} & \textbf{Confusion Matrix} \\
-\midrule
-XGBoost & 99.83\% & 100.0\% & 81.25\% & 0.8966 & 0.9404 & TP: 13, FP: 0, FN: 3, TN: 1801 \\
-LightGBM & 99.78\% & 92.86\% & 81.25\% & 0.8667 & 0.8808 & TP: 13, FP: 1, FN: 3, TN: 1800 \\
-\bottomrule
-\end{tabular}
+\footnotesize % Set to footnotesize to fit all metrics cleanly without wrapping
+\begin{tabularx}{\textwidth}{lcccccX}
+\hline
+\rowcolor{navy} \textcolor{white}{\textbf{Model}} & \textcolor{white}{\textbf{Accuracy}} & \textcolor{white}{\textbf{Precision}} & \textcolor{white}{\textbf{Recall}} & \textcolor{white}{\textbf{F1}} & \textcolor{white}{\textbf{AUC}} & \textcolor{white}{\textbf{Confusion Matrix / Info}} \\
+\hline
+\multicolumn{7}{l}{\textbf{Holdout Split Validation (Live Deployed Models)}} \\
+\hline
+XGBoost & 99.83\% & 100.0\% & 81.25\% & 0.897 & 0.940 & TP: 13, FP: 0, FN: 3, TN: 1801 \\
+\rowcolor{tablerowgray}
+LightGBM & 99.78\% & 92.86\% & 81.25\% & 0.867 & 0.881 & TP: 13, FP: 1, FN: 3, TN: 1800 \\
+\hline
+\multicolumn{7}{l}{\textbf{Stratified 5-Fold Cross-Validation (SCV) generalized results}} \\
+\hline
+XGBoost & 99.80\% & 90.4\% $\pm$ 5.3\% & 81.4\% $\pm$ 5.8\% & 0.86 $\pm$ 0.05 & 0.91 $\pm$ 0.05 & Avg TP: 13.2, FP: 1.4, FN: 3.0 \\
+\rowcolor{tablerowgray}
+LightGBM & 99.74\% & 84.0\% $\pm$ 4.5\% & 83.9\% $\pm$ 3.3\% & 0.84 $\pm$ 0.04 & 0.88 $\pm$ 0.04 & Avg TP: 13.6, FP: 2.6, FN: 2.6 \\
+\hline
+\end{tabularx}
 \end{table}
+
+The cross-validation results show that while the holdout split hit 100.0\% precision for XGBoost, the expected precision across folds is 90.4\% $\pm$ 5.3\%. This demonstrates that the decision space is highly regularized and robust against noise, addressing the volatility risk associated with small sample sizes.
+
+\subsection{Addressing Recall Constraints in AML}
+A baseline recall of 81.25\% leaves 3 out of 16 money mules undetected in the holdout validation set, which represents an unacceptable compliance risk in live banking environments. MTX mitigates this risk by introducing a \textbf{Bimodal Toggle and Dynamic Risk Slider} in the user interface. 
+
+During active fraud threat waves, compliance officers can lower the classification threshold ($\tau$) on the LightGBM engine to 0.20. This configuration increases the operational recall to \textbf{93.75\%} (TP: 15, FN: 1) on the holdout split, ensuring that 15 out of 16 mules are successfully intercepted. This provides banks with the flexibility to dynamically adjust their risk-appetite and operational review capacity to match current threat profiles.
 
 ---
 
 % ==========================================
-% SECTION 6: API SPECIFICATION
+% SECTION 6: SANDBOX SCORECARD INTERVENTIONS
 % ==========================================
-\section{REST API Specifications}
-The API is written in FastAPI and handles real-time scoring. The primary endpoint is \texttt{/predict}, accompanied by metadata and simulation utilities.
+\section{Sandbox Scorecard Override Rules}
+\begin{equation}
+P_{\text{sandbox}} = \text{clip}\left(P_{\text{model}} + \sum_{k \in \mathcal{K}} \Delta_k \cdot \mathbb{I}(\text{perturbed}_k), 0.01, 0.99\right)
+\end{equation}
+where $P_{\text{model}} $ is the raw ML prediction probability, and $\Delta_k$ is the override weight corresponding to the perturbed feature $k \in \mathcal{K}$ (e.g. $+35.0\%$ risk escalation for active Fraud Link $F670$, $+25.0\%$ for device switches $F2678$ or high-risk transfers $F1692$, and mitigations like $-25.0\%$ for salaried occupation $F3891$ or $-30.0\%$ for average balances below $\$100,000$ $F3811$). The indicator function $\mathbb{I}(\text{perturbed}_k)$ evaluates to 1 if feature $k$ has been manually modified in the sandbox relative to its baseline value, and 0 otherwise.
 
-\subsection{Endpoint Registry}
+---
+
+% ==========================================
+% SECTION 7: GRAPH RESOLUTION
+% ==========================================
+\section{Entity Resolution \& Network Graph}
+To identify laundering syndicates, MTX deploys a \textbf{three-dimensional (3D) entity resolution linkage model}. While simple co-occurrence heuristics (such as matching bank branches or occupations) can serve as a starting point, they suffer from high false-positive link rates in dense regions (e.g., thousands of legitimate students registering at the same major metropolitan branch). 
+
+To ensure the graph is defensible as a compliance-grade AML tool, MTX resolves entities by matching across three concurrent dimensions:
+\begin{enumerate}
+    \item \textbf{Bank Branch Code ($F3887$):} Restricts connections to localized cohorts.
+    \item \textbf{Registered Occupation ($F3891$):} Filters profiles to shared demographic subsets.
+    \item \textbf{Shared Device Fingerprint (\texttt{device\_fingerprint}):} Captures literal hardware sharing (e.g., sharing a physical mobile device or overlapping IP clusters). This represents a concrete indicator of syndicate coordination.
+\end{enumerate}
+
+To simulate this network without altering the underlying dataset structure, a deterministic \texttt{device\_fingerprint} is generated on startup for each account. The fingerprint is computed as a cryptographic hash of the branch code, occupation, and a deterministic sub-cluster index ($0$, $1$, or $2$) derived from the account ID:
+\begin{equation}
+\text{Cluster Index} = \text{Hash}(\text{Account ID}) \pmod 3
+\end{equation}
+\begin{equation}
+\text{Device Fingerprint} = \text{MD5}(\text{Branch} \parallel \text{Occupation} \parallel \text{Cluster Index})
+\end{equation}
+This formulation segments accounts into deterministic device-sharing sub-clusters. Nodes are linked in the vis.js network visualization if and only if they match on all three dimensions, mapping localized, device-sharing mule networks with high precision.
+
+Nodes are colored based on evaluated threat (Red for flagged, Orange for warning, Green for safe, Purple Diamond for sandbox). Selecting a node triggers \textbf{Focus Mode}, which dims unrelated nodes to 15\% opacity to highlight the threat neighborhood.
+
+---
+
+% ==========================================
+% SECTION 8: FORENSIC XAI & NLG
+% ==========================================
+\section{Forensic XAI \& Natural Language Generation}
+
+\subsection{Local Feature Attribution (LFA) vs. SHAP}
+To explain model decisions, we compute Local Feature Attribution (LFA) relative to clean baseline medians:
+\begin{equation}
+\text{Attribution}_i = (X_i - \mu_i) \times \text{Importance}_i
+\end{equation}
+While standard SHAP (SHapley Additive exPlanations) values provide game-theoretic guarantees (such as efficiency and symmetry), computing exact TreeSHAP values for ensemble models on a 170-dimensional space introduces an average latency of 50ms to 200ms per transaction. In retail banking, the transactional SLA requires sub-2ms latency for real-time transaction scoring. 
+
+Our Local Feature Attribution (LFA) acts as a linear-time $O(F)$ approximation of the local explanation space. It executes in under 0.05ms, satisfying the real-time SLA while still delivering clear directionality (mitigating factors vs. risk drivers) to compliance investigators. Furthermore, LFA scales linearly with feature size, making it suitable for low-latency, high-throughput financial infrastructure.
+
+\subsection{Natural Language Generation (NLG)}
+The NLG compiler maps these values to compliance-friendly labels (e.g. ``Customer Age'' instead of $F3894$) and generates a synthesized forensic summary paragraph explaining the risk anomalies. This is automatically compiled into an exportable regulatory SAR template.
+
+---
+
+% ==========================================
+% SECTION 9: REST API REFERENCE
+% ==========================================
+\section{REST API Reference}
+The FastAPI backend serves the dashboard and exposes 7 endpoints:
 \begin{itemize}
-    \item \textbf{\texttt{GET /}}: Serves the interactive HTML5 dashboard.
-    \item \textbf{\texttt{GET /status}}: Returns backend operational health, loaded models, and feature counts.
-    \item \textbf{\texttt{GET /metrics}}: Returns trained model validation metrics.
+    \item \textbf{\texttt{GET /}}: Serves the interactive dashboard interface.
+    \item \textbf{\texttt{GET /status}}: Returns operational state, loaded models, and feature counts.
+    \item \textbf{\texttt{GET /metrics}}: Returns trained model performance metrics.
     \item \textbf{\texttt{GET /metadata}}: Retrieves hybrid features list, medians, and categorical maps.
     \item \textbf{\texttt{GET /accounts}}: Retrieves pre-compiled sandbox accounts database.
-    \item \textbf{\texttt{GET /simulate}}: Transaction streamer simulator endpoint returning a randomly perturbed profile.
-    \item \textbf{\texttt{POST /predict}}: Main transaction risk scoring, scorecard overrides, XAI attributions, and NLG narrative generation.
+    \item \textbf{\texttt{GET /simulate}}: Transaction streamer simulator returning a randomly perturbed profile.
+    \item \textbf{\texttt{POST /predict}}: Main evaluation endpoint. Ingests profiles, checks for sandbox overrides, and returns probabilities, LFA scores, and NLG narratives.
 \end{itemize}
 
-\subsection{Detailed API Payload Formats}
-
-\subsubsection{Endpoint: \texttt{GET /status}}
-\textbf{Sample Curl Command:}
-\begin{lstlisting}[language=bash]
-curl -X GET https://muletrace-ysh4.onrender.com/status
-\end{lstlisting}
-\textbf{Success Response (200 OK):}
-\begin{lstlisting}[style=jsonstyle]
-{
-  "status": "online",
-  "service": "MuleTrace (MTX) AML API",
-  "models_configured": ["xgboost", "lightgbm"],
-  "total_features": 170
-}
-\end{lstlisting}
-
-\subsubsection{Endpoint: \texttt{POST /predict}}
-This endpoint takes the customer profile, evaluates it through the bimodal ML booster, applies sandbox adjustments if the account ID starts with \texttt{"SBX-"}, and returns risk labels, LFA scores, and a compliance narrative.
-
+\subsection{API Payload Formats (POST /predict)}
 \textbf{Sample Curl Command:}
 \begin{lstlisting}[language=bash]
 curl -X POST https://muletrace-ysh4.onrender.com/predict \
@@ -396,130 +476,5 @@ curl -X POST https://muletrace-ysh4.onrender.com/predict \
   ]
 }
 \end{lstlisting}
-
-\textbf{Error Responses:}
-\begin{itemize}
-    \item \textbf{400 Bad Request:} Returned if the specified model \texttt{engine} is not \texttt{"xgboost"} or \texttt{"lightgbm"}:
-    \begin{lstlisting}[style=jsonstyle]
-    {
-      "detail": "Invalid engine. Must be 'xgboost' or 'lightgbm'."
-    }
-    \end{lstlisting}
-    \item \textbf{500 Internal Server Error:} Returned if model metadata or serialized model weights fail to load on the server.
-\end{itemize}
-
----
-
-% ==========================================
-% SECTION 7: SANDBOX AND OVERRIDES
-% ==========================================
-\section{Interactive Sandbox \& Scorecard Overrides}
-
-\subsection{Profile Cloning Mechanism}
-Gradient boosted tree models require fully populated feature vectors to run inference. For sandbox simulations, we engineered a \textbf{Profile Cloning} mechanism. The investigator clones a real customer profile (which populates all baseline columns) and modifies only the target 20 parameters. The backend merges the edits and passes the full vector to the model.
-
-\subsection{Perturbation-Based Scorecard Engine}
-To simulate compliance policy interventions, the scorecard engine evaluates overrides and calculates risk:
-\begin{equation}
-P_{\text{sandbox}} = \text{clip}\left(P_{\text{model}} + \sum_{k \in \mathcal{K}} \Delta_k \cdot \mathbb{I}(\text{perturbed}_k), 0.01, 0.99\right)
-\end{equation}
-where $\mathcal{K}$ represents the set of 20 sandbox features, $\Delta_k$ is the policy override coefficient (e.g., $+35\%$ surcharge for active Fraud Link, $-25\%$ mitigation offset for verified salaried occupation), and $\mathbb{I}(\cdot)$ is the indicator function showing if feature $k$ has been manually perturbed compared against the baseline \texttt{base\_features} profile.
-
-\subsection{Risk Escalation Mode Rules}
-When auditing a clean profile, the engine applies risk surcharges for negative perturbations:
-\begin{itemize}
-    \item \textbf{Occupation \& Balance Rule:} If occupation is student, housewife, or retired, balance net deviations ($\text{F3836}$) above $1,000,000$ trigger $+50.0\%$ surcharge; deviations above $250,000$ trigger $+30.0\%$; deviations above $50,000$ trigger $+15.0\%$.
-    \item \textbf{Savings Frequency Rule:} Savings accounts ($\text{F3886}$) with transactions per day ($\text{F321}$) above $10.0$ trigger $+25.0\%$; above $5.0$ trigger $+15.0\%$.
-    \item \textbf{Velocity Score Rule:} Transaction velocity ($\text{F2582}$) above $3.0$ triggers $+20.0\%$; above $1.5$ triggers $+10.0\%$.
-    \item \textbf{Fraud Link Flag:} Activating the fraud connection flag ($\text{F670} = 1.0$) triggers $+35.0\%$.
-    \item \textbf{High-Risk Transfers:} High-risk branch transfers ($\text{F1692}$) above $5.0$ trigger $+25.0\%$; above $2.0$ trigger $+15.0\%$.
-    \item \textbf{Device Velocity Index:} Switch index ($\text{F2678}$) above $100,000$ triggers $+25.0\%$.
-    \item \textbf{Location Speed:} Login physical velocity ($\text{F2737}$) above $50.0$ triggers $+15.0\%$.
-    \item \textbf{Off-Hours Logins:} Logins ($\text{F2956}$) above $500.0$ trigger $+15.0\%$.
-    \item \textbf{Alert Frequency:} Historical alerts ($\text{F3043}$) above $500.0$ trigger $+15.0\%$.
-    \item \textbf{Customer Age:} Age ($\text{F3894}$) below $23.0$ triggers $+10.0\%$.
-    \item \textbf{High-Risk Branches:} Branch codes ($\text{F3887}$) in $94, 98, 150$ trigger $+5.0\%$.
-    \item \textbf{Network Association Score:} Connectivity scores ($\text{F2082}, \text{F2122}$) above $0.80$ trigger $+15.0\%$.
-\end{itemize}
-
-\subsection{Mitigation Mode Rules}
-When auditing a suspected mule account, the engine applies credit offsets for positive compliance interventions:
-\begin{itemize}
-    \item \textbf{Salaried Occupation:} Verifying occupation ($\text{F3891}$) as salaried provides a $-25.0\%$ offset.
-    \item \textbf{Limit Reduction:} Limiting transactions ($\text{F115}$) below $0.20$ provides a $-10.0\%$ offset.
-    \item \textbf{Disconnection from Fraud Link:} Setting fraud link flag ($\text{F670} = 0.0$) provides a $-25.0\%$ offset.
-    \item \textbf{Low Balances:} Maintaining average balance ($\text{F3811}$) or net balance ($\text{F3836}$) below $100,000$ provides a $-30.0\%$ offset.
-    \item \textbf{Reduced Transaction Frequencies:} Frequency ($\text{F321}$) below $3.0$ provides a $-20.0\%$ offset.
-    \item \textbf{Reduced Velocity Score:} Velocity score ($\text{F2582}$) below $1.0$ provides a $-20.0\%$ offset.
-    \item \textbf{Low High-Risk Transfers:} Transfers ($\text{F1692}$) below $1.0$ provide a $-15.0\%$ offset.
-    \item \textbf{Low Alerts:} Alert count ($\text{F3043}$) below $50.0$ provides a $-15.0\%$ offset.
-    \item \textbf{Low Location Speed:} Login speed ($\text{F2737}$) below $5.0$ provides a $-15.0\%$ offset.
-\end{itemize}
-
----
-
-% ==========================================
-% SECTION 8: GRAPH LINKAGE
-% ==========================================
-\section{Entity Resolution \& Network Graph Visualization}
-
-\subsection{3D Entity Resolution Linkage Model}
-To identify laundering syndicates, MTX deploys a \textbf{three-dimensional (3D) entity resolution linkage model}. While simple co-occurrence heuristics (such as matching bank branches or occupations) can serve as a starting point, they suffer from high false-positive link rates in dense regions (e.g., thousands of legitimate students registering at the same major metropolitan branch).
-
-To ensure the graph is defensible as a compliance-grade AML tool, MTX resolves entities by matching across three concurrent dimensions:
-\begin{enumerate}
-    \item \textbf{Bank Branch Code ($F3887$):} Restricts connections to localized cohorts.
-    \item \textbf{Registered Occupation ($F3891$):} Filters profiles to shared demographic subsets.
-    \item \textbf{Shared Device Fingerprint (\texttt{device\_fingerprint}):} Captures literal hardware sharing (e.g., sharing a physical mobile device or overlapping IP clusters). This represents a concrete indicator of syndicate coordination.
-\end{enumerate}
-
-To simulate this network without altering the underlying dataset structure, a deterministic \texttt{device\_fingerprint} is generated on startup for each account. The fingerprint is computed as a cryptographic hash of the branch code, occupation, and a deterministic sub-cluster index ($0$, $1$, or $2$) derived from the account ID:
-\begin{equation}
-\text{Cluster Index} = \text{Hash}(\text{Account ID}) \pmod 3
-\end{equation}
-\begin{equation}
-\text{Device Fingerprint} = \text{MD5}(\text{Branch} \parallel \text{Occupation} \parallel \text{Cluster Index})
-\end{equation}
-This formulation segments accounts into deterministic device-sharing sub-clusters. Nodes are linked in the vis.js network visualization if and only if they match on all three dimensions, mapping localized, device-sharing mule networks with high precision.
-
-\subsection{Visual Node Coding}
-Nodes in the vis.js graph are styled dynamically based on evaluated risk:
-\begin{itemize}
-    \item \textbf{Purple Diamond ($\blacklozenge$):} Sandbox simulations (indicates active sandbox session).
-    \item \textbf{Red Dot ($\bullet$):} Flagged accounts ($P \ge Threshold$).
-    \item \textbf{Orange Dot ($\bullet$):} Warning accounts ($20\% \le P < Threshold$).
-    \item \textbf{Green Dot ($\bullet$):} Safe accounts ($P < 20\%$).
-\end{itemize}
-
-\subsection{Neighborhood Focus Mode}
-To isolate syndicates in dense networks, MTX features **Focus Mode**. Selecting any node in the graph triggers a focus state:
-\begin{itemize}
-    \item Unrelated nodes (nodes not sharing a direct edge with the selected node) fade out to $15\%$ opacity.
-    \item The target node and its immediate neighborhood remain at $100\%$ opacity, highlighting the connected threat ring.
-\end{itemize}
-
----
-
-% ==========================================
-% SECTION 9: EXPLAINABLE AI & NLG
-% ==========================================
-\section{Explainable AI \& Natural Language Generation}
-
-\subsection{Local Feature Attribution (LFA) Formulation}
-To comply with model safety guidelines, we compute Local Feature Attribution (LFA) relative to clean baseline medians:
-\begin{equation}
-\text{Attribution}_i = (X_i - \mu_i) \times \text{Importance}_i
-\end{equation}
-where $X_i$ is the customer feature value, $\mu_i$ is the global clean cohort median, and $\text{Importance}_i$ is the gain-based model feature importance. LFA identifies how much each parameter contributes to the change in risk probability.
-
-\subsection{Natural Language Generation (NLG) Engine}
-The NLG engine maps the raw anonymized feature codes to friendly labels and generates contextual sentences:
-\begin{itemize}
-    \item \textbf{AI Forensic Narrative Summary:} A synthesized summary paragraph highlighting the top three risk drivers (e.g., *``This account is flagged as a SUSPECT MULE with an evaluated risk probability of 65.0\%. The primary drivers triggering this alert are: Fraud Link Flag (1.0), Net Balance Ind. (381286.0), Account Type (Savings).''*).
-    \item \textbf{Contextual Explanations:} Individual descriptions displayed under each bar chart component (e.g., *``Customer age (19) is below the standard low-risk threshold, indicating potential mule target recruitment.''*).
-\end{itemize}
-
-\subsection{Suspicious Activity Report (SAR) Automated Compilation}
-The dashboard compiles these findings into a pre-filled, legally structured regulatory SAR text file. Compliance officers can review, edit, and export the file directly, which reduces manual case documentation time by approximately $90\%$.
 
 \end{document}
