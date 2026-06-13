@@ -359,7 +359,7 @@ To ensure the graph is defensible as a compliance-grade AML tool, MTX resolves e
     \item \textbf{Shared Device Fingerprint (\texttt{device\_fingerprint}):} Captures literal hardware sharing (e.g., sharing a physical mobile device or overlapping IP clusters). This represents a concrete indicator of syndicate coordination.
 \end{enumerate}
 
-To simulate this network without altering the underlying dataset structure, a deterministic \texttt{device\_fingerprint} is generated on startup for each account. The fingerprint is computed as a cryptographic hash of the branch code, occupation, and a deterministic sub-cluster index ($0$, $1$, or $2$) derived from the account ID:
+To simulate this network without altering the underlying dataset structure, a deterministic device fingerprint is generated on startup for each account. The fingerprint is computed as a cryptographic hash of the branch code, occupation, and a deterministic sub-cluster index ($0$, $1$, or $2$) derived from the account ID:
 \begin{equation}
 \text{Cluster Index} = \text{Hash}(\text{Account ID}) \pmod 3
 \end{equation}
